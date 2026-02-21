@@ -135,10 +135,10 @@ export default function ForexCalculatorApp() {
   // Global currency pair state - syncs across all calculators
   const [globalPair, setGlobalPair] = useState<string>('EUR/USD');
   
-  // Statistics tracking
+  // Statistics tracking - fixed initial values to avoid hydration mismatch
   const [stats, setStats] = useState({
     totalCalculations: 0,
-    visitors: Math.floor(Math.random() * 500) + 100, // Simulated visitors
+    visitors: 127, // Fixed value for SSR
     popularCalculators: [
       { name: 'Position Size', count: 0 },
       { name: 'Pip Value', count: 0 },
@@ -411,6 +411,36 @@ export default function ForexCalculatorApp() {
                     component={<MovingAverageCalculator t={t} language={language} />}
                   />
                   <CalculatorCard 
+                    title="ATR"
+                    description={language === 'ar' ? 'متوسط المدى الحقيقي' : 'Average True Range'}
+                    icon={<Activity className="w-5 h-5" />}
+                    component={<ATRCalculator t={t} language={language} />}
+                  />
+                  <CalculatorCard 
+                    title="RSI"
+                    description={language === 'ar' ? 'مؤشر القوة النسبية' : 'Relative Strength Index'}
+                    icon={<Activity className="w-5 h-5" />}
+                    component={<RSICalculator t={t} language={language} />}
+                  />
+                  <CalculatorCard 
+                    title="MACD"
+                    description={language === 'ar' ? 'مؤشر التقارب والتباعد' : 'Moving Average Convergence Divergence'}
+                    icon={<BarChart3 className="w-5 h-5" />}
+                    component={<MACDCalculator t={t} language={language} />}
+                  />
+                  <CalculatorCard 
+                    title="Bollinger Bands"
+                    description={language === 'ar' ? 'نطاقات بولينجر' : 'Bollinger Bands'}
+                    icon={<TrendingUp className="w-5 h-5" />}
+                    component={<BollingerBandsCalculator t={t} language={language} />}
+                  />
+                  <CalculatorCard 
+                    title="Stochastic"
+                    description={language === 'ar' ? 'مذبذب ستوكاستيك' : 'Stochastic Oscillator'}
+                    icon={<Activity className="w-5 h-5" />}
+                    component={<StochasticCalculator t={t} language={language} />}
+                  />
+                  <CalculatorCard 
                     title={language === 'ar' ? 'معامل الارتباط' : 'Correlation'}
                     description={language === 'ar' ? 'احسب معامل الارتباط' : 'Calculate correlation'}
                     icon={<Repeat className="w-5 h-5" />}
@@ -470,6 +500,24 @@ export default function ForexCalculatorApp() {
                     icon={<Wallet className="w-5 h-5" />}
                     component={<AccountSizeCalculator t={t} language={language} />}
                   />
+                  <CalculatorCard 
+                    title="Profit Factor"
+                    description={language === 'ar' ? 'معامل الربحية' : 'Profit Factor Calculator'}
+                    icon={<TrendingUp className="w-5 h-5" />}
+                    component={<ProfitFactorCalculator t={t} language={language} />}
+                  />
+                  <CalculatorCard 
+                    title={language === 'ar' ? 'منحنى الأسهم' : 'Equity Curve'}
+                    description={language === 'ar' ? 'توقع نمو الحساب' : 'Project account growth'}
+                    icon={<LineChart className="w-5 h-5" />}
+                    component={<EquityCurveCalculator t={t} language={language} />}
+                  />
+                  <CalculatorCard 
+                    title={language === 'ar' ? 'متوسط الصفقة' : 'Avg Trade'}
+                    description={language === 'ar' ? 'متوسط الربح للصفقة' : 'Average profit per trade'}
+                    icon={<Calculator className="w-5 h-5" />}
+                    component={<AverageTradeCalculator t={t} language={language} />}
+                  />
                 </div>
               </TabsContent>
 
@@ -499,6 +547,12 @@ export default function ForexCalculatorApp() {
                     description={language === 'ar' ? 'حول بين المناطق الزمنية' : 'Convert between time zones'}
                     icon={<Clock className="w-5 h-5" />}
                     component={<TimeZoneConverter t={t} language={language} />}
+                  />
+                  <CalculatorCard 
+                    title={language === 'ar' ? 'تداخل الجلسات' : 'Session Overlap'}
+                    description={language === 'ar' ? 'أفضل وقت للتداول' : 'Best trading times'}
+                    icon={<Clock className="w-5 h-5" />}
+                    component={<SessionOverlapCalculator t={t} language={language} />}
                   />
                 </div>
               </TabsContent>
@@ -541,6 +595,42 @@ export default function ForexCalculatorApp() {
                     description={language === 'ar' ? 'احسب VaR' : 'Calculate VaR'}
                     icon={<AlertTriangle className="w-5 h-5" />}
                     component={<VaRCalculator t={t} language={language} />}
+                  />
+                  <CalculatorCard 
+                    title={language === 'ar' ? 'حرارة المراكز' : 'Position Heat'}
+                    description={language === 'ar' ? 'مخاطر المراكز المفتوحة' : 'Open positions risk'}
+                    icon={<Zap className="w-5 h-5" />}
+                    component={<PositionHeatCalculator t={t} language={language} />}
+                  />
+                  <CalculatorCard 
+                    title={language === 'ar' ? 'مسافة وقف الخسارة' : 'SL Distance'}
+                    description={language === 'ar' ? 'احسب مسافة الوقف' : 'Calculate stop loss distance'}
+                    icon={<Target className="w-5 h-5" />}
+                    component={<StopLossDistanceCalculator t={t} language={language} />}
+                  />
+                  <CalculatorCard 
+                    title={language === 'ar' ? 'جني الأرباح' : 'Take Profit'}
+                    description={language === 'ar' ? 'احسب مستوى الهدف' : 'Calculate take profit level'}
+                    icon={<TrendingUp className="w-5 h-5" />}
+                    component={<TakeProfitCalculator t={t} language={language} />}
+                  />
+                  <CalculatorCard 
+                    title={language === 'ar' ? 'مخاطر الإفلاس' : 'Risk of Ruin'}
+                    description={language === 'ar' ? 'احسب مخاطر الإفلاس' : 'Calculate risk of ruin'}
+                    icon={<AlertTriangle className="w-5 h-5" />}
+                    component={<RiskOfRuinCalculator t={t} language={language} />}
+                  />
+                  <CalculatorCard 
+                    title={language === 'ar' ? 'العمولات' : 'Commission'}
+                    description={language === 'ar' ? 'احسب تكاليف العمولة' : 'Calculate commission costs'}
+                    icon={<Coins className="w-5 h-5" />}
+                    component={<CommissionCalculator t={t} language={language} />}
+                  />
+                  <CalculatorCard 
+                    title={language === 'ar' ? 'تأثير الرافعة' : 'Leverage Impact'}
+                    description={language === 'ar' ? 'تأثير الرافعة على الربح' : 'Leverage effect on profit'}
+                    icon={<Layers className="w-5 h-5" />}
+                    component={<LeverageImpactCalculator t={t} language={language} />}
                   />
                 </div>
               </TabsContent>
