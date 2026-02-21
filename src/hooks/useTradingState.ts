@@ -43,17 +43,31 @@ export const useTradingState = create<TradingState>()(
           { name: 'Risk/Reward', count: 0 },
           { name: 'Fibonacci', count: 0 },
           { name: 'Profit/Loss', count: 0 },
+          { name: 'Margin', count: 0 },
+          { name: 'Spread', count: 0 },
+          { name: 'Pips Converter', count: 0 },
         ]
       },
       incrementCalculation: (calculatorName) => {
         const prev = get().stats;
+        const existingCalc = prev.popularCalculators.find(c => c.name === calculatorName);
+        
+        let updatedCalculators;
+        if (existingCalc) {
+          // Update existing calculator count
+          updatedCalculators = prev.popularCalculators.map(c => 
+            c.name === calculatorName ? { ...c, count: c.count + 1 } : c
+          );
+        } else {
+          // Add new calculator
+          updatedCalculators = [...prev.popularCalculators, { name: calculatorName, count: 1 }];
+        }
+        
         set({
           stats: {
             ...prev,
             totalCalculations: prev.totalCalculations + 1,
-            popularCalculators: prev.popularCalculators.map(c => 
-              c.name === calculatorName ? { ...c, count: c.count + 1 } : c
-            ).sort((a, b) => b.count - a.count)
+            popularCalculators: updatedCalculators.sort((a, b) => b.count - a.count)
           }
         });
       }

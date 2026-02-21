@@ -48,14 +48,61 @@ function CalculatorCard({
   title, 
   description, 
   icon, 
-  component 
+  component,
+  usageCount,
+  popularityRank
 }: { 
   title: string; 
   description: string; 
   icon: React.ReactNode; 
   component: React.ReactNode;
+  usageCount?: number;
+  popularityRank?: number;
 }) {
   const [isExpanded, setIsExpanded] = useState(false);
+  
+  // Determine badge type based on popularity
+  const getPopularityBadge = () => {
+    if (!usageCount || usageCount === 0) return null;
+    
+    if (popularityRank === 1) {
+      return (
+        <Badge className="bg-gradient-to-r from-yellow-400 to-amber-500 text-yellow-900 text-[10px] px-2 py-0.5 gap-1">
+          <Flame className="w-3 h-3" />
+          #1 {title.includes('حاسبة') || title.includes('Size') || title.includes('Value') ? '' : 'Hot'}
+        </Badge>
+      );
+    }
+    if (popularityRank === 2) {
+      return (
+        <Badge className="bg-gradient-to-r from-gray-300 to-gray-400 text-gray-800 text-[10px] px-2 py-0.5 gap-1">
+          <TrendingUp className="w-3 h-3" />
+          #2
+        </Badge>
+      );
+    }
+    if (popularityRank === 3) {
+      return (
+        <Badge className="bg-gradient-to-r from-amber-600 to-amber-700 text-white text-[10px] px-2 py-0.5 gap-1">
+          <TrendingUp className="w-3 h-3" />
+          #3
+        </Badge>
+      );
+    }
+    if (popularityRank && popularityRank <= 5) {
+      return (
+        <Badge variant="secondary" className="text-[10px] px-2 py-0.5 gap-1">
+          <Activity className="w-3 h-3" />
+          Top {popularityRank}
+        </Badge>
+      );
+    }
+    return (
+      <Badge variant="outline" className="text-[10px] px-2 py-0.5">
+        {usageCount} {usageCount === 1 ? 'use' : 'uses'}
+      </Badge>
+    );
+  };
   
   return (
     <motion.div
@@ -63,12 +110,20 @@ function CalculatorCard({
       className="group h-full"
     >
       <Card className={`
-        h-full overflow-hidden transition-all duration-300
+        h-full overflow-hidden transition-all duration-300 relative
         ${isExpanded 
           ? 'ring-2 ring-primary shadow-xl' 
           : 'hover:shadow-md border border-border/50'
         }
+        ${popularityRank && popularityRank <= 3 ? 'ring-1 ring-primary/30' : ''}
       `}>
+        {/* Popularity Badge - Top Right */}
+        {usageCount && usageCount > 0 && (
+          <div className="absolute top-2 right-2 z-10">
+            {getPopularityBadge()}
+          </div>
+        )}
+        
         {/* Header - Always Visible */}
         <div 
           className="p-4 cursor-pointer select-none"
@@ -76,13 +131,32 @@ function CalculatorCard({
         >
           <div className="flex items-center gap-3">
             <div className={`
-              w-11 h-11 rounded-xl flex items-center justify-center shrink-0
+              w-11 h-11 rounded-xl flex items-center justify-center shrink-0 relative
               ${isExpanded 
                 ? 'gradient-primary text-white shadow-md' 
                 : 'bg-muted text-primary'
               }
             `}>
               {icon}
+              {/* Rank indicator on icon for top 3 */}
+              {popularityRank && popularityRank <= 3 && (
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  className={`
+                    absolute -top-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center
+                    text-[10px] font-bold shadow-md
+                    ${popularityRank === 1 
+                      ? 'bg-gradient-to-r from-yellow-400 to-amber-500 text-yellow-900' 
+                      : popularityRank === 2 
+                        ? 'bg-gradient-to-r from-gray-200 to-gray-400 text-gray-800'
+                        : 'bg-gradient-to-r from-amber-600 to-amber-700 text-white'
+                    }
+                  `}
+                >
+                  {popularityRank}
+                </motion.div>
+              )}
             </div>
             <div className="flex-1 min-w-0">
               <h3 className="font-semibold text-sm truncate">{title}</h3>
@@ -146,6 +220,21 @@ export default function ForexCalculatorApp() {
       hasHydrated.current = true;
     }
   }, []);
+
+  // Helper function to get popularity info for a calculator
+  const getPopularityInfo = (calculatorName: string): { usageCount: number; rank: number | undefined } => {
+    const popularCalcs = stats.popularCalculators;
+    const index = popularCalcs.findIndex(c => c.name === calculatorName);
+    
+    if (index === -1 || popularCalcs[index].count === 0) {
+      return { usageCount: 0, rank: undefined };
+    }
+    
+    return { 
+      usageCount: popularCalcs[index].count, 
+      rank: index + 1 
+    };
+  };
 
   // Fetch real forex prices
   const fetchRealPrices = async () => {
@@ -296,12 +385,14 @@ export default function ForexCalculatorApp() {
                     description={language === 'ar' ? 'احسب الحجم الأمثل لصفقتك' : 'Calculate optimal position size'}
                     icon={<Calculator className="w-5 h-5" />}
                     component={<PositionSizeCalculator t={t} language={language} />}
+                    {...getPopularityInfo('Position Size')}
                   />
                   <CalculatorCard 
                     title={language === 'ar' ? 'المخاطرة/المكافأة' : 'Risk/Reward'}
                     description={language === 'ar' ? 'نسبة المخاطرة للمكافأة' : 'Risk to reward ratio'}
                     icon={<Target className="w-5 h-5" />}
                     component={<RiskRewardCalculator t={t} language={language} />}
+                    {...getPopularityInfo('Risk/Reward')}
                   />
                   <CalculatorCard 
                     title={language === 'ar' ? 'المخاطرة بالنسبة المئوية' : 'Risk Percentage'}
@@ -338,18 +429,21 @@ export default function ForexCalculatorApp() {
                     description={language === 'ar' ? 'احسب قيمة النقطة' : 'Calculate pip value'}
                     icon={<Activity className="w-5 h-5" />}
                     component={<PipValueCalculator t={t} language={language} />}
+                    {...getPopularityInfo('Pip Value')}
                   />
                   <CalculatorCard 
                     title={language === 'ar' ? 'الهامش المطلوب' : 'Margin Required'}
                     description={language === 'ar' ? 'احسب الهامش المطلوب' : 'Calculate required margin'}
                     icon={<DollarSign className="w-5 h-5" />}
                     component={<MarginCalculator t={t} language={language} exchangeRates={exchangeRates} />}
+                    {...getPopularityInfo('Margin')}
                   />
                   <CalculatorCard 
                     title={language === 'ar' ? 'الربح والخسارة' : 'Profit/Loss'}
                     description={language === 'ar' ? 'احسب الربح أو الخسارة' : 'Calculate profit or loss'}
                     icon={<TrendingUp className="w-5 h-5" />}
                     component={<ProfitLossCalculator t={t} language={language} />}
+                    {...getPopularityInfo('Profit/Loss')}
                   />
                   <CalculatorCard 
                     title={language === 'ar' ? 'السواب' : 'Swap'}
@@ -380,6 +474,7 @@ export default function ForexCalculatorApp() {
                     description={language === 'ar' ? 'احسب مستويات فيبوناتشي' : 'Calculate Fibonacci levels'}
                     icon={<LineChart className="w-5 h-5" />}
                     component={<FibonacciCalculator t={t} language={language} />}
+                    {...getPopularityInfo('Fibonacci')}
                   />
                   <CalculatorCard 
                     title={language === 'ar' ? 'نقاط البيفوت' : 'Pivot Points'}
@@ -518,6 +613,7 @@ export default function ForexCalculatorApp() {
                     description={language === 'ar' ? 'حول النقاط للسعر' : 'Convert pips to price'}
                     icon={<Hash className="w-5 h-5" />}
                     component={<PipsConverter t={t} language={language} />}
+                    {...getPopularityInfo('Pips Converter')}
                   />
                   <CalculatorCard 
                     title={language === 'ar' ? 'تحويل اللوت' : 'Lot Converter'}
@@ -548,6 +644,7 @@ export default function ForexCalculatorApp() {
                     description={language === 'ar' ? 'احسب السبريد' : 'Calculate spread'}
                     icon={<ArrowUpDown className="w-5 h-5" />}
                     component={<SpreadCalculator t={t} language={language} />}
+                    {...getPopularityInfo('Spread')}
                   />
                   <CalculatorCard 
                     title={language === 'ar' ? 'تكلفة الصفقة' : 'Trade Cost'}
