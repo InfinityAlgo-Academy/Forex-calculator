@@ -300,7 +300,7 @@ export default function ForexCalculatorApp() {
                     title={language === 'ar' ? 'الهامش المطلوب' : 'Margin Required'}
                     description={language === 'ar' ? 'احسب الهامش المطلوب' : 'Calculate required margin'}
                     icon={<DollarSign className="w-5 h-5" />}
-                    component={<MarginCalculator t={t} language={language} />}
+                    component={<MarginCalculator t={t} language={language} exchangeRates={exchangeRates} />}
                   />
                   <CalculatorCard 
                     title={language === 'ar' ? 'الربح والخسارة' : 'Profit/Loss'}
@@ -489,7 +489,7 @@ export default function ForexCalculatorApp() {
         </section>
 
         {/* AI Analysis Section */}
-        <AIAnalysisSection t={t} language={language} />
+        <AIAnalysisSection t={t} language={language} exchangeRates={exchangeRates} />
 
         {/* Features Section */}
         <FeaturesSection t={t} language={language} />
@@ -967,7 +967,7 @@ function PipValueCalculator({ t, language }: { t: (key: string) => string; langu
 }
 
 // Margin Calculator
-function MarginCalculator({ t, language }: { t: (key: string) => string; language: string }) {
+function MarginCalculator({ t, language, exchangeRates }: { t: (key: string) => string; language: string; exchangeRates: Record<string, number> }) {
   const [lotSize, setLotSize] = useState<string>('1');
   const [leverage, setLeverage] = useState<string>('1:100');
   const [currencyPair, setCurrencyPair] = useState<string>('EUR/USD');
@@ -1941,7 +1941,7 @@ function CompoundInterestCalculator({ t, language }: { t: (key: string) => strin
 }
 
 // AI Analysis Section
-function AIAnalysisSection({ t, language }: { t: (key: string) => string; language: string }) {
+function AIAnalysisSection({ t, language, exchangeRates }: { t: (key: string) => string; language: string; exchangeRates: Record<string, number> }) {
   const [selectedPair, setSelectedPair] = useState<string>('EUR/USD');
   const [isLoading, setIsLoading] = useState(false);
   const [analysis, setAnalysis] = useState<{
