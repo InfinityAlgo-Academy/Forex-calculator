@@ -43,7 +43,7 @@ const defaultExchangeRates: Record<string, number> = {
   'BTC/USD': 67500.00, 'ETH/USD': 3450.00
 };
 
-// Calculator Card Component
+// Calculator Card Component - Mobile Style
 function CalculatorCard({ 
   title, 
   description, 
@@ -60,63 +60,60 @@ function CalculatorCard({
   return (
     <motion.div
       layout
-      className="group"
+      className="group h-full"
     >
       <Card className={`
-        overflow-hidden transition-all duration-300 cursor-pointer
+        h-full overflow-hidden transition-all duration-300
         ${isExpanded 
-          ? 'ring-2 ring-primary shadow-xl scale-[1.02]' 
-          : 'hover:shadow-lg hover:scale-[1.01] border-2 border-transparent hover:border-primary/20'
+          ? 'ring-2 ring-primary shadow-xl' 
+          : 'hover:shadow-md border border-border/50'
         }
       `}>
-        <div onClick={() => setIsExpanded(!isExpanded)}>
-          <CardHeader className="pb-3">
-            <div className="flex items-center gap-4">
-              <motion.div 
-                className={`
-                  w-14 h-14 rounded-2xl flex items-center justify-center
-                  ${isExpanded 
-                    ? 'gradient-primary text-white shadow-lg' 
-                    : 'bg-gradient-to-br from-primary/10 to-accent/10 text-primary group-hover:from-primary/20 group-hover:to-accent/20'
-                  }
-                `}
-                whileHover={{ rotate: isExpanded ? 0 : 5 }}
-                transition={{ duration: 0.2 }}
-              >
-                {icon}
-              </motion.div>
-              <div className="flex-1 min-w-0">
-                <CardTitle className="text-lg font-bold truncate">{title}</CardTitle>
-                <p className="text-sm text-muted-foreground truncate">{description}</p>
-              </div>
-              <motion.div
-                animate={{ rotate: isExpanded ? 180 : 0 }}
-                transition={{ duration: 0.3 }}
-                className={`
-                  w-8 h-8 rounded-full flex items-center justify-center
-                  ${isExpanded ? 'bg-primary text-primary-foreground' : 'bg-muted'}
-                `}
-              >
-                <ChevronRight className="w-5 h-5" />
-              </motion.div>
+        {/* Header - Always Visible */}
+        <div 
+          className="p-4 cursor-pointer select-none"
+          onClick={() => setIsExpanded(!isExpanded)}
+        >
+          <div className="flex items-center gap-3">
+            <div className={`
+              w-11 h-11 rounded-xl flex items-center justify-center shrink-0
+              ${isExpanded 
+                ? 'gradient-primary text-white shadow-md' 
+                : 'bg-muted text-primary'
+              }
+            `}>
+              {icon}
             </div>
-          </CardHeader>
+            <div className="flex-1 min-w-0">
+              <h3 className="font-semibold text-sm truncate">{title}</h3>
+              <p className="text-xs text-muted-foreground truncate">{description}</p>
+            </div>
+            <motion.div
+              animate={{ rotate: isExpanded ? 180 : 0 }}
+              transition={{ duration: 0.2 }}
+              className={`
+                w-7 h-7 rounded-full flex items-center justify-center shrink-0
+                ${isExpanded ? 'bg-primary text-primary-foreground' : 'bg-muted/50'}
+              `}
+            >
+              <ChevronRight className="w-4 h-4" />
+            </motion.div>
+          </div>
         </div>
         
+        {/* Content - Expandable */}
         <AnimatePresence>
           {isExpanded && (
             <motion.div
               initial={{ height: 0, opacity: 0 }}
               animate={{ height: 'auto', opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.3, ease: 'easeInOut' }}
+              transition={{ duration: 0.25, ease: 'easeOut' }}
             >
-              <div className="px-6 pb-2">
-                <div className="h-px bg-gradient-to-r from-transparent via-border to-transparent" />
-              </div>
-              <CardContent className="pt-4">
+              <div className="px-4 pb-4">
+                <div className="h-px bg-border mb-4" />
                 {component}
-              </CardContent>
+              </div>
             </motion.div>
           )}
         </AnimatePresence>
@@ -963,115 +960,93 @@ function PositionSizeCalculator({ t, language }: { t: (key: string) => string; l
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -20 }}
-    >
-      <Card className="max-w-2xl mx-auto">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Calculator className="w-6 h-6 text-primary" />
-            {t('positionSize')}
-          </CardTitle>
-          <CardDescription>
-            {language === 'ar'
-              ? 'احسب الحجم الأمثل لصفقتك بناءً على رصيدك ونسبة المخاطرة'
-              : 'Calculate the optimal position size based on your balance and risk percentage'}
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label>{t('accountBalance')}</Label>
-              <Input
-                type="number"
-                value={accountBalance}
-                onChange={(e) => setAccountBalance(e.target.value)}
-                placeholder="10000"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>{t('riskPercentage')}</Label>
-              <Input
-                type="number"
-                value={riskPercent}
-                onChange={(e) => setRiskPercent(e.target.value)}
-                placeholder="2"
-                min="0.1"
-                max="100"
-                step="0.1"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>{t('stopLossPips')}</Label>
-              <Input
-                type="number"
-                value={stopLossPips}
-                onChange={(e) => setStopLossPips(e.target.value)}
-                placeholder="50"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label className="flex items-center gap-2">
-                {t('currencyPair')}
-                {currencyPair === globalPair && (
-                  <Badge variant="outline" className="text-xs">{language === 'ar' ? 'متزامن' : 'Synced'}</Badge>
-                )}
-              </Label>
-              <Select value={currencyPair} onValueChange={setCurrencyPair}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {currencyPairs.map(pair => (
-                    <SelectItem key={pair} value={pair}>{pair}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label>{t('accountCurrency')}</Label>
-              <Select value={accountCurrency} onValueChange={setAccountCurrency}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {accountCurrencies.map(curr => (
-                    <SelectItem key={curr} value={curr}>{curr}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+    <div className="space-y-4">
+      <div className="grid grid-cols-2 gap-3">
+        <div className="space-y-1">
+          <Label className="text-xs">{t('accountBalance')}</Label>
+          <Input
+            type="number"
+            value={accountBalance}
+            onChange={(e) => setAccountBalance(e.target.value)}
+            placeholder="10000"
+            className="h-9"
+          />
+        </div>
+        <div className="space-y-1">
+          <Label className="text-xs">{t('riskPercentage')}</Label>
+          <Input
+            type="number"
+            value={riskPercent}
+            onChange={(e) => setRiskPercent(e.target.value)}
+            placeholder="2"
+            min="0.1"
+            max="100"
+            step="0.1"
+            className="h-9"
+          />
+        </div>
+        <div className="space-y-1">
+          <Label className="text-xs">{t('stopLossPips')}</Label>
+          <Input
+            type="number"
+            value={stopLossPips}
+            onChange={(e) => setStopLossPips(e.target.value)}
+            placeholder="50"
+            className="h-9"
+          />
+        </div>
+        <div className="space-y-1">
+          <Label className="text-xs flex items-center gap-1">
+            {t('currencyPair')}
+            {currencyPair === globalPair && (
+              <Badge variant="outline" className="text-[10px] px-1 py-0 h-4">{language === 'ar' ? 'متزامن' : 'Synced'}</Badge>
+            )}
+          </Label>
+          <Select value={currencyPair} onValueChange={setCurrencyPair}>
+            <SelectTrigger className="h-9">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {currencyPairs.map(pair => (
+                <SelectItem key={pair} value={pair}>{pair}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-1 col-span-2 sm:col-span-1">
+          <Label className="text-xs">{t('accountCurrency')}</Label>
+          <Select value={accountCurrency} onValueChange={setAccountCurrency}>
+            <SelectTrigger className="h-9">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {accountCurrencies.map(curr => (
+                <SelectItem key={curr} value={curr}>{curr}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      <Button onClick={calculate} className="w-full gradient-primary text-white h-9">
+        {t('calculate')}
+      </Button>
+
+      {result && (
+        <div className="grid grid-cols-2 gap-3 p-3 bg-muted/50 rounded-lg">
+          <div className="text-center">
+            <p className="text-xs text-muted-foreground">{t('lotSizeResult')}</p>
+            <p className="text-xl font-bold text-primary">{result.lotSize.toFixed(2)}</p>
+            <p className="text-[10px] text-muted-foreground">Lots</p>
           </div>
-
-          <Button onClick={calculate} className="w-full gradient-primary text-white">
-            {t('calculate')}
-          </Button>
-
-          {result && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="result-box"
-            >
-              <div className="grid grid-cols-2 gap-4">
-                <div className="text-center">
-                  <p className="text-sm text-muted-foreground">{t('lotSizeResult')}</p>
-                  <p className="text-3xl font-bold text-primary">{result.lotSize.toFixed(2)}</p>
-                  <p className="text-xs text-muted-foreground">Lots</p>
-                </div>
-                <div className="text-center">
-                  <p className="text-sm text-muted-foreground">{t('riskAmount')}</p>
-                  <p className="text-3xl font-bold text-destructive">{result.riskAmount.toFixed(2)}</p>
-                  <p className="text-xs text-muted-foreground">{accountCurrency}</p>
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </CardContent>
-      </Card>
-    </motion.div>
+          <div className="text-center">
+            <p className="text-xs text-muted-foreground">{t('riskAmount')}</p>
+            <p className="text-xl font-bold text-destructive">{result.riskAmount.toFixed(2)}</p>
+            <p className="text-[10px] text-muted-foreground">{accountCurrency}</p>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -1106,85 +1081,65 @@ function PipValueCalculator({ t, language }: { t: (key: string) => string; langu
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -20 }}
-    >
-      <Card className="max-w-2xl mx-auto">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Activity className="w-6 h-6 text-primary" />
-            {t('pipValue')}
-          </CardTitle>
-          <CardDescription>{t('pipValueTitle')}</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div className="space-y-2">
-              <Label className="flex items-center gap-2">
-                {t('currencyPair')}
-                {currencyPair === globalPair && (
-                  <Badge variant="outline" className="text-xs">{language === 'ar' ? 'متزامن' : 'Synced'}</Badge>
-                )}
-              </Label>
-              <Select value={currencyPair} onValueChange={setCurrencyPair}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {currencyPairs.map(pair => (
-                    <SelectItem key={pair} value={pair}>{pair}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label>{t('tradeSize')}</Label>
-              <Input
-                type="number"
-                value={lotSize}
-                onChange={(e) => setLotSize(e.target.value)}
-                placeholder="1"
-                step="0.01"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>{t('accountCurrency')}</Label>
-              <Select value={accountCurrency} onValueChange={setAccountCurrency}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {accountCurrencies.map(curr => (
-                    <SelectItem key={curr} value={curr}>{curr}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
+    <div className="space-y-4">
+      <div className="grid grid-cols-3 gap-3">
+        <div className="space-y-1">
+          <Label className="text-xs flex items-center gap-1">
+            {t('currencyPair')}
+            {currencyPair === globalPair && (
+              <Badge variant="outline" className="text-[10px] px-1 py-0 h-4">{language === 'ar' ? 'متزامن' : 'Synced'}</Badge>
+            )}
+          </Label>
+          <Select value={currencyPair} onValueChange={setCurrencyPair}>
+            <SelectTrigger className="h-9">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {currencyPairs.map(pair => (
+                <SelectItem key={pair} value={pair}>{pair}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-1">
+          <Label className="text-xs">{t('tradeSize')}</Label>
+          <Input
+            type="number"
+            value={lotSize}
+            onChange={(e) => setLotSize(e.target.value)}
+            placeholder="1"
+            step="0.01"
+            className="h-9"
+          />
+        </div>
+        <div className="space-y-1">
+          <Label className="text-xs">{t('accountCurrency')}</Label>
+          <Select value={accountCurrency} onValueChange={setAccountCurrency}>
+            <SelectTrigger className="h-9">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {accountCurrencies.map(curr => (
+                <SelectItem key={curr} value={curr}>{curr}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
 
-          <Button onClick={calculate} className="w-full gradient-primary text-white">
-            {t('calculate')}
-          </Button>
+      <Button onClick={calculate} className="w-full gradient-primary text-white h-9">
+        {t('calculate')}
+      </Button>
 
-          {result !== null && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="result-box"
-            >
-              <div className="text-center">
-                <p className="text-sm text-muted-foreground">{t('pipValueResult')}</p>
-                <p className="text-4xl font-bold text-primary">
-                  {result.toFixed(2)} <span className="text-lg">{accountCurrency}</span>
-                </p>
-              </div>
-            </motion.div>
-          )}
-        </CardContent>
-      </Card>
-    </motion.div>
+      {result !== null && (
+        <div className="text-center p-3 bg-muted/50 rounded-lg">
+          <p className="text-xs text-muted-foreground">{t('pipValueResult')}</p>
+          <p className="text-xl font-bold text-primary">
+            {result.toFixed(2)} <span className="text-sm">{accountCurrency}</span>
+          </p>
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -1214,85 +1169,63 @@ function MarginCalculator({ t, language, exchangeRates }: { t: (key: string) => 
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -20 }}
-    >
-      <Card className="max-w-2xl mx-auto">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <DollarSign className="w-6 h-6 text-primary" />
-            {t('marginCalculator')}
-          </CardTitle>
-          <CardDescription>{t('marginTitle')}</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div className="space-y-2">
-              <Label>{t('tradeSize')}</Label>
-              <Input
-                type="number"
-                value={lotSize}
-                onChange={(e) => setLotSize(e.target.value)}
-                placeholder="1"
-                step="0.01"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>{t('leverage')}</Label>
-              <Select value={leverage} onValueChange={setLeverage}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {leverageOptions.map(lev => (
-                    <SelectItem key={lev} value={lev}>{lev}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label className="flex items-center gap-2">
-                {t('currencyPair')}
-                {currencyPair === globalPair && (
-                  <Badge variant="outline" className="text-xs">{language === 'ar' ? 'متزامن' : 'Synced'}</Badge>
-                )}
-              </Label>
-              <Select value={currencyPair} onValueChange={setCurrencyPair}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {currencyPairs.map(pair => (
-                    <SelectItem key={pair} value={pair}>{pair}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
+    <div className="space-y-4">
+      <div className="grid grid-cols-3 gap-3">
+        <div className="space-y-1">
+          <Label className="text-xs">{t('tradeSize')}</Label>
+          <Input
+            type="number"
+            value={lotSize}
+            onChange={(e) => setLotSize(e.target.value)}
+            placeholder="1"
+            step="0.01"
+            className="h-9"
+          />
+        </div>
+        <div className="space-y-1">
+          <Label className="text-xs">{t('leverage')}</Label>
+          <Select value={leverage} onValueChange={setLeverage}>
+            <SelectTrigger className="h-9">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {leverageOptions.map(lev => (
+                <SelectItem key={lev} value={lev}>{lev}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-1">
+          <Label className="text-xs flex items-center gap-1">
+            {t('currencyPair')}
+            {currencyPair === globalPair && (
+              <Badge variant="outline" className="text-[10px] px-1 py-0 h-4">{language === 'ar' ? 'متزامن' : 'Synced'}</Badge>
+            )}
+          </Label>
+          <Select value={currencyPair} onValueChange={setCurrencyPair}>
+            <SelectTrigger className="h-9">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {currencyPairs.map(pair => (
+                <SelectItem key={pair} value={pair}>{pair}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
 
-          <Button onClick={calculate} className="w-full gradient-primary text-white">
-            {t('calculate')}
-          </Button>
+      <Button onClick={calculate} className="w-full gradient-primary text-white h-9">
+        {t('calculate')}
+      </Button>
 
-          {result !== null && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="result-box"
-            >
-              <div className="text-center">
-                <p className="text-sm text-muted-foreground">{t('marginRequired')}</p>
-                <p className="text-4xl font-bold text-primary">
-                  ${result.toFixed(2)}
-                </p>
-              </div>
-            </motion.div>
-          )}
-        </CardContent>
-      </Card>
-    </motion.div>
+      {result !== null && (
+        <div className="text-center p-3 bg-muted/50 rounded-lg">
+          <p className="text-xs text-muted-foreground">{t('marginRequired')}</p>
+          <p className="text-xl font-bold text-primary">${result.toFixed(2)}</p>
+        </div>
+      )}
+    </div>
   );
 }
 
