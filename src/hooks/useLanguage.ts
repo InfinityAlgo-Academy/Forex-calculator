@@ -1,7 +1,7 @@
 'use client';
 
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { persist, createJSONStorage } from 'zustand/middleware';
 import { translations, Language, TranslationKey } from '@/lib/i18n';
 
 interface LanguageState {
@@ -23,7 +23,18 @@ export const useLanguage = create<LanguageState>()(
       isRTL: () => get().language === 'ar',
     }),
     {
-      name: 'language-storage',
+      name: 'forex-language-storage',
+      storage: createJSONStorage(() => localStorage),
+      skipHydration: true,
     }
   )
 );
+
+// Hook to hydrate language after mount
+export function useHydrateLanguage() {
+  const hydrate = useLanguage.persist.rehydrate;
+  
+  if (typeof window !== 'undefined') {
+    hydrate();
+  }
+}

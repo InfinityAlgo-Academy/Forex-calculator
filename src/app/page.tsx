@@ -96,51 +96,46 @@ export default function ForexCalculatorApp() {
             </div>
 
             <Tabs defaultValue="position" className="w-full">
-              <TabsList className="grid grid-cols-3 sm:grid-cols-5 lg:grid-cols-9 gap-2 h-auto p-2 bg-card rounded-xl mb-8">
-                <TabsTrigger value="position" className="text-xs sm:text-sm">
-                  <Calculator className="w-4 h-4 mr-1 rtl:ml-1 rtl:mr-0" />
-                  <span className="hidden sm:inline">{t('positionSize')}</span>
-                  <span className="sm:hidden">{language === 'ar' ? 'الحجم' : 'Size'}</span>
+              <TabsList className="grid grid-cols-5 sm:grid-cols-5 lg:grid-cols-10 gap-1 h-auto p-2 bg-card rounded-xl mb-8">
+                <TabsTrigger value="position" className="text-xs px-2">
+                  <Calculator className="w-3 h-3 sm:w-4 sm:h-4 sm:mr-1" />
+                  <span className="hidden lg:inline">{language === 'ar' ? 'الحجم' : 'Size'}</span>
                 </TabsTrigger>
-                <TabsTrigger value="pip" className="text-xs sm:text-sm">
-                  <Activity className="w-4 h-4 mr-1 rtl:ml-1 rtl:mr-0" />
-                  <span className="hidden sm:inline">{t('pipValue')}</span>
-                  <span className="sm:hidden">Pip</span>
+                <TabsTrigger value="pip" className="text-xs px-2">
+                  <Activity className="w-3 h-3 sm:w-4 sm:h-4 sm:mr-1" />
+                  <span className="hidden lg:inline">Pip</span>
                 </TabsTrigger>
-                <TabsTrigger value="margin" className="text-xs sm:text-sm">
-                  <DollarSign className="w-4 h-4 mr-1 rtl:ml-1 rtl:mr-0" />
-                  <span className="hidden sm:inline">{t('marginCalculator')}</span>
-                  <span className="sm:hidden">{language === 'ar' ? 'الهامش' : 'Margin'}</span>
+                <TabsTrigger value="margin" className="text-xs px-2">
+                  <DollarSign className="w-3 h-3 sm:w-4 sm:h-4 sm:mr-1" />
+                  <span className="hidden lg:inline">{language === 'ar' ? 'الهامش' : 'Margin'}</span>
                 </TabsTrigger>
-                <TabsTrigger value="profit" className="text-xs sm:text-sm">
-                  <TrendingUp className="w-4 h-4 mr-1 rtl:ml-1 rtl:mr-0" />
-                  <span className="hidden sm:inline">{t('profitLoss')}</span>
-                  <span className="sm:hidden">P/L</span>
+                <TabsTrigger value="profit" className="text-xs px-2">
+                  <TrendingUp className="w-3 h-3 sm:w-4 sm:h-4 sm:mr-1" />
+                  <span className="hidden lg:inline">P/L</span>
                 </TabsTrigger>
-                <TabsTrigger value="risk" className="text-xs sm:text-sm">
-                  <Target className="w-4 h-4 mr-1 rtl:ml-1 rtl:mr-0" />
-                  <span className="hidden sm:inline">{t('riskReward')}</span>
-                  <span className="sm:hidden">R/R</span>
+                <TabsTrigger value="risk" className="text-xs px-2">
+                  <Target className="w-3 h-3 sm:w-4 sm:h-4 sm:mr-1" />
+                  <span className="hidden lg:inline">R/R</span>
                 </TabsTrigger>
-                <TabsTrigger value="fibonacci" className="text-xs sm:text-sm">
-                  <LineChart className="w-4 h-4 mr-1 rtl:ml-1 rtl:mr-0" />
-                  <span className="hidden sm:inline">{t('fibonacci')}</span>
-                  <span className="sm:hidden">Fib</span>
+                <TabsTrigger value="fibonacci" className="text-xs px-2">
+                  <LineChart className="w-3 h-3 sm:w-4 sm:h-4 sm:mr-1" />
+                  <span className="hidden lg:inline">Fib</span>
                 </TabsTrigger>
-                <TabsTrigger value="pivot" className="text-xs sm:text-sm">
-                  <BarChart3 className="w-4 h-4 mr-1 rtl:ml-1 rtl:mr-0" />
-                  <span className="hidden sm:inline">{t('pivotPoints')}</span>
-                  <span className="sm:hidden">Pivot</span>
+                <TabsTrigger value="pivot" className="text-xs px-2">
+                  <BarChart3 className="w-3 h-3 sm:w-4 sm:h-4 sm:mr-1" />
+                  <span className="hidden lg:inline">Pivot</span>
                 </TabsTrigger>
-                <TabsTrigger value="swap" className="text-xs sm:text-sm">
-                  <RefreshCw className="w-4 h-4 mr-1 rtl:ml-1 rtl:mr-0" />
-                  <span className="hidden sm:inline">{t('swapCalculator')}</span>
-                  <span className="sm:hidden">Swap</span>
+                <TabsTrigger value="swap" className="text-xs px-2">
+                  <RefreshCw className="w-3 h-3 sm:w-4 sm:h-4 sm:mr-1" />
+                  <span className="hidden lg:inline">Swap</span>
                 </TabsTrigger>
-                <TabsTrigger value="converter" className="text-xs sm:text-sm">
-                  <Globe className="w-4 h-4 mr-1 rtl:ml-1 rtl:mr-0" />
-                  <span className="hidden sm:inline">{language === 'ar' ? 'محول العملات' : 'Converter'}</span>
-                  <span className="sm:hidden">{language === 'ar' ? 'تحويل' : 'Conv'}</span>
+                <TabsTrigger value="converter" className="text-xs px-2">
+                  <Globe className="w-3 h-3 sm:w-4 sm:h-4 sm:mr-1" />
+                  <span className="hidden lg:inline">{language === 'ar' ? 'تحويل' : 'Conv'}</span>
+                </TabsTrigger>
+                <TabsTrigger value="compound" className="text-xs px-2">
+                  <Percent className="w-3 h-3 sm:w-4 sm:h-4 sm:mr-1" />
+                  <span className="hidden lg:inline">{language === 'ar' ? 'مركبة' : 'Comp'}</span>
                 </TabsTrigger>
               </TabsList>
 
@@ -170,6 +165,9 @@ export default function ForexCalculatorApp() {
               </TabsContent>
               <TabsContent value="converter" className="mt-0">
                 <CurrencyConverter t={t} language={language} />
+              </TabsContent>
+              <TabsContent value="compound" className="mt-0">
+                <CompoundInterestCalculator t={t} language={language} />
               </TabsContent>
             </Tabs>
           </div>
@@ -1474,6 +1472,150 @@ function CurrencyConverter({ t, language }: { t: (key: string) => string; langua
                 <p className="text-sm text-muted-foreground mt-2">
                   1 {fromCurrency} = {(rates[toCurrency] / rates[fromCurrency]).toFixed(4)} {toCurrency}
                 </p>
+              </div>
+            </motion.div>
+          )}
+        </CardContent>
+      </Card>
+    </motion.div>
+  );
+}
+
+// Compound Interest Calculator
+function CompoundInterestCalculator({ t, language }: { t: (key: string) => string; language: string }) {
+  const [principal, setPrincipal] = useState<string>('10000');
+  const [monthlyContribution, setMonthlyContribution] = useState<string>('500');
+  const [annualRate, setAnnualRate] = useState<string>('12');
+  const [years, setYears] = useState<string>('5');
+  const [compoundFrequency, setCompoundFrequency] = useState<string>('12');
+  const [result, setResult] = useState<{
+    futureValue: number;
+    totalContributions: number;
+    totalInterest: number;
+  } | null>(null);
+
+  const calculate = () => {
+    const P = parseFloat(principal) || 0;
+    const PMT = parseFloat(monthlyContribution) || 0;
+    const r = (parseFloat(annualRate) || 0) / 100;
+    const n = parseInt(compoundFrequency) || 12;
+    const t = parseFloat(years) || 1;
+
+    // Future value of principal with compound interest
+    const futureValuePrincipal = P * Math.pow(1 + r / n, n * t);
+
+    // Future value of monthly contributions (annuity)
+    const futureValueContributions = PMT * ((Math.pow(1 + r / n, n * t) - 1) / (r / n));
+
+    const futureValue = futureValuePrincipal + futureValueContributions;
+    const totalContributions = P + (PMT * 12 * t);
+    const totalInterest = futureValue - totalContributions;
+
+    setResult({
+      futureValue,
+      totalContributions,
+      totalInterest,
+    });
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+    >
+      <Card className="max-w-2xl mx-auto">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Percent className="w-6 h-6 text-primary" />
+            {language === 'ar' ? 'حاسبة الفائدة المركبة' : 'Compound Interest Calculator'}
+          </CardTitle>
+          <CardDescription>
+            {language === 'ar'
+              ? 'احسب نمو استثمارك مع الفائدة المركبة'
+              : 'Calculate your investment growth with compound interest'}
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>{language === 'ar' ? 'رأس المال الأولي' : 'Initial Principal'}</Label>
+              <Input
+                type="number"
+                value={principal}
+                onChange={(e) => setPrincipal(e.target.value)}
+                placeholder="10000"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>{language === 'ar' ? 'المساهمة الشهرية' : 'Monthly Contribution'}</Label>
+              <Input
+                type="number"
+                value={monthlyContribution}
+                onChange={(e) => setMonthlyContribution(e.target.value)}
+                placeholder="500"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>{language === 'ar' ? 'نسبة الفائدة السنوية (%)' : 'Annual Interest Rate (%)'}</Label>
+              <Input
+                type="number"
+                value={annualRate}
+                onChange={(e) => setAnnualRate(e.target.value)}
+                placeholder="12"
+                step="0.1"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>{language === 'ar' ? 'عدد السنوات' : 'Number of Years'}</Label>
+              <Input
+                type="number"
+                value={years}
+                onChange={(e) => setYears(e.target.value)}
+                placeholder="5"
+              />
+            </div>
+            <div className="space-y-2 sm:col-span-2">
+              <Label>{language === 'ar' ? 'تكرار الفائدة' : 'Compound Frequency'}</Label>
+              <Select value={compoundFrequency} onValueChange={setCompoundFrequency}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="1">{language === 'ar' ? 'سنوياً' : 'Annually'}</SelectItem>
+                  <SelectItem value="2">{language === 'ar' ? 'نصف سنوي' : 'Semi-Annually'}</SelectItem>
+                  <SelectItem value="4">{language === 'ar' ? 'ربع سنوي' : 'Quarterly'}</SelectItem>
+                  <SelectItem value="12">{language === 'ar' ? 'شهرياً' : 'Monthly'}</SelectItem>
+                  <SelectItem value="365">{language === 'ar' ? 'يومياً' : 'Daily'}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <Button onClick={calculate} className="w-full gradient-primary text-white">
+            {t('calculate')}
+          </Button>
+
+          {result && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="result-box"
+            >
+              <div className="text-center mb-4">
+                <p className="text-sm text-muted-foreground">{language === 'ar' ? 'القيمة المستقبلية' : 'Future Value'}</p>
+                <p className="text-4xl font-bold text-primary">
+                  ${result.futureValue.toFixed(2)}
+                </p>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="text-center p-3 rounded-lg bg-muted">
+                  <p className="text-xs text-muted-foreground">{language === 'ar' ? 'إجمالي المساهمات' : 'Total Contributions'}</p>
+                  <p className="text-xl font-bold">${result.totalContributions.toFixed(2)}</p>
+                </div>
+                <div className="text-center p-3 rounded-lg bg-success/10">
+                  <p className="text-xs text-muted-foreground">{language === 'ar' ? 'إجمالي الفائدة' : 'Total Interest'}</p>
+                  <p className="text-xl font-bold text-success">${result.totalInterest.toFixed(2)}</p>
+                </div>
               </div>
             </motion.div>
           )}
