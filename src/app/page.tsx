@@ -8,7 +8,8 @@ import {
   Globe, ChevronRight, AlertTriangle, CheckCircle2, 
   RefreshCw, Zap, Shield, Award, Menu, X, Loader2,
   Layers, Scale, ArrowUpDown, Coins, Wallet, PieChart,
-  Clock, Hash, Repeat, Sparkles, TrendingUpIcon
+  Clock, Hash, Repeat, Sparkles, TrendingUpIcon, Flame,
+  Gift, Timer, Star, ExternalLink, Crown, Diamond
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -243,6 +244,9 @@ export default function ForexCalculatorApp() {
             </div>
           </div>
         </section>
+
+        {/* Professional Ads Section */}
+        <ProfessionalAdsSection language={language} />
 
         {/* Calculators Section */}
         <section id="calculators" className="py-16 px-4 sm:px-6 lg:px-8 bg-muted/30">
@@ -3971,5 +3975,308 @@ function AverageTradeCalculator({ t, language }: { t: (key: string) => string; l
       <Button onClick={calculate} className="w-full gradient-primary text-white text-sm py-1">{t('calculate')}</Button>
       {result && <div className="text-center"><p className="font-bold text-primary">${result.avgProfit.toFixed(2)}</p><p className="text-xs">{language === 'ar' ? 'متوسط/صفقة' : 'Avg/Trade'}</p></div>}
     </div>
+  );
+}
+
+// ============== PROFESSIONAL ADS SECTION ==============
+
+// Countdown Timer Component
+function CountdownTimer({ language }: { language: string }) {
+  const [timeLeft, setTimeLeft] = useState({ hours: 23, minutes: 59, seconds: 59 });
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setTimeLeft(prev => {
+        let { hours, minutes, seconds } = prev;
+        if (seconds > 0) {
+          seconds--;
+        } else {
+          seconds = 59;
+          if (minutes > 0) {
+            minutes--;
+          } else {
+            minutes = 59;
+            if (hours > 0) {
+              hours--;
+            }
+          }
+        }
+        return { hours, minutes, seconds };
+      });
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  return (
+    <div className="flex items-center gap-2">
+      <Timer className="w-4 h-4 animate-pulse" />
+      <div className="flex gap-1 font-mono">
+        <span className="bg-black/30 px-2 py-1 rounded text-sm font-bold">
+          {String(timeLeft.hours).padStart(2, '0')}
+        </span>
+        <span className="text-sm">:</span>
+        <span className="bg-black/30 px-2 py-1 rounded text-sm font-bold">
+          {String(timeLeft.minutes).padStart(2, '0')}
+        </span>
+        <span className="text-sm">:</span>
+        <span className="bg-black/30 px-2 py-1 rounded text-sm font-bold">
+          {String(timeLeft.seconds).padStart(2, '0')}
+        </span>
+      </div>
+      <span className="text-xs opacity-80">
+        {language === 'ar' ? 'متبقي' : 'left'}
+      </span>
+    </div>
+  );
+}
+
+// Professional Ads Section
+function ProfessionalAdsSection({ language }: { language: string }) {
+  const [currentAd, setCurrentAd] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentAd(prev => (prev + 1) % 2);
+    }, 8000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const ads = [
+    {
+      id: 1,
+      checkoutUrl: 'https://infinityalgoacademy.net/checkout/?fct_cart_hash=d74ccfb0eaaca7ce3994e3361c3ca105',
+      productName: language === 'ar' ? 'Gold One MT4 - الكود المصدري' : 'Gold One MT4 Source Code',
+      originalPrice: 100,
+      salePrice: 75,
+      discount: 25,
+      discountPercent: 25,
+      badge: language === 'ar' ? '🔥 أفضل عرض - خصم 25%' : '🔥 Best Offer – 25% Discount',
+      subtitle: language === 'ar' ? 'عرض محدود الوقت' : 'Limited Time Offer',
+      features: language === 'ar' 
+        ? ['كود مصدري كامل', 'دعم فني مجاني', 'تحديثات مدى الحياة']
+        : ['Full Source Code', 'Free Support', 'Lifetime Updates'],
+      gradient: 'from-amber-500 via-orange-500 to-red-500',
+      icon: Crown,
+    },
+    {
+      id: 2,
+      checkoutUrl: 'https://infinityalgoacademy.net/checkout/?fct_cart_hash=8d9777f0d0cc255238afa75597c95be5',
+      productName: language === 'ar' ? 'InfinityRSI Divergence V6.2' : 'InfinityRSI-Divergence-V.6.2',
+      originalPrice: 50,
+      salePrice: 12.50,
+      discount: 37.50,
+      discountPercent: 75,
+      badge: language === 'ar' ? '🔥 ترقية خاصة - خصم 75%' : '🔥 Yes! Upgrade with 75% OFF',
+      subtitle: language === 'ar' ? 'عرض حصري - مرة واحدة فقط' : 'One-Time Exclusive Offer',
+      features: language === 'ar'
+        ? ['مؤشر RSI متقدم', 'كشف التباعد القوي', 'تنبيهات ذكية']
+        : ['Advanced RSI Indicator', 'Strong Divergence Detection', 'Smart Alerts'],
+      gradient: 'from-purple-600 via-pink-500 to-rose-500',
+      icon: Diamond,
+    }
+  ];
+
+  return (
+    <section className="py-8 px-4 sm:px-6 lg:px-8 overflow-hidden">
+      <div className="max-w-5xl mx-auto">
+        <AnimatePresence mode="wait">
+          {ads.map((ad, index) => (
+            currentAd === index && (
+              <motion.div
+                key={ad.id}
+                initial={{ opacity: 0, x: 100 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -100 }}
+                transition={{ duration: 0.5, ease: 'easeInOut' }}
+                className="relative"
+              >
+                <motion.a
+                  href={ad.checkoutUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={`
+                    block relative overflow-hidden rounded-2xl
+                    bg-gradient-to-r ${ad.gradient}
+                    shadow-2xl cursor-pointer group
+                  `}
+                  whileHover={{ scale: 1.01, y: -2 }}
+                  whileTap={{ scale: 0.99 }}
+                >
+                  {/* Animated Background Elements */}
+                  <div className="absolute inset-0 overflow-hidden">
+                    <motion.div 
+                      className="absolute -top-20 -right-20 w-60 h-60 bg-white/10 rounded-full blur-3xl"
+                      animate={{ 
+                        scale: [1, 1.2, 1],
+                        opacity: [0.3, 0.5, 0.3]
+                      }}
+                      transition={{ duration: 4, repeat: Infinity }}
+                    />
+                    <motion.div 
+                      className="absolute -bottom-20 -left-20 w-60 h-60 bg-black/10 rounded-full blur-3xl"
+                      animate={{ 
+                        scale: [1.2, 1, 1.2],
+                        opacity: [0.5, 0.3, 0.5]
+                      }}
+                      transition={{ duration: 4, repeat: Infinity }}
+                    />
+                    {/* Floating Particles */}
+                    {[...Array(5)].map((_, i) => (
+                      <motion.div
+                        key={i}
+                        className="absolute w-2 h-2 bg-white/20 rounded-full"
+                        style={{
+                          left: `${20 + i * 15}%`,
+                          top: `${20 + (i % 3) * 30}%`,
+                        }}
+                        animate={{
+                          y: [-10, 10, -10],
+                          opacity: [0.2, 0.5, 0.2],
+                        }}
+                        transition={{
+                          duration: 2 + i * 0.5,
+                          repeat: Infinity,
+                          delay: i * 0.3,
+                        }}
+                      />
+                    ))}
+                  </div>
+
+                  {/* Content */}
+                  <div className="relative z-10 p-6 sm:p-8">
+                    <div className="flex flex-col lg:flex-row items-center justify-between gap-6">
+                      {/* Left Side - Badge & Timer */}
+                      <div className="flex flex-col items-center lg:items-start gap-4">
+                        {/* Badge */}
+                        <motion.div
+                          initial={{ scale: 0 }}
+                          animate={{ scale: 1 }}
+                          transition={{ delay: 0.2, type: 'spring' }}
+                          className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full border border-white/30"
+                        >
+                          <Flame className="w-5 h-5 animate-pulse text-yellow-200" />
+                          <span className="font-bold text-white text-sm">{ad.badge}</span>
+                        </motion.div>
+
+                        {/* Countdown Timer */}
+                        <div className="text-white/90">
+                          <CountdownTimer language={language} />
+                        </div>
+                      </div>
+
+                      {/* Center - Product Info */}
+                      <div className="flex-1 text-center lg:text-left">
+                        <div className="flex items-center justify-center lg:justify-start gap-3 mb-3">
+                          <motion.div
+                            className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center"
+                            whileHover={{ rotate: 10 }}
+                          >
+                            <ad.icon className="w-7 h-7 text-white" />
+                          </motion.div>
+                          <h3 className="text-xl sm:text-2xl font-bold text-white">
+                            {ad.productName}
+                          </h3>
+                        </div>
+
+                        {/* Features */}
+                        <div className="flex flex-wrap justify-center lg:justify-start gap-2 mb-4">
+                          {ad.features.map((feature, i) => (
+                            <motion.div
+                              key={i}
+                              initial={{ opacity: 0, y: 10 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              transition={{ delay: 0.3 + i * 0.1 }}
+                              className="flex items-center gap-1 bg-white/10 backdrop-blur-sm px-3 py-1 rounded-full text-white/90 text-xs"
+                            >
+                              <CheckCircle2 className="w-3 h-3" />
+                              {feature}
+                            </motion.div>
+                          ))}
+                        </div>
+
+                        {/* Pricing */}
+                        <div className="flex items-center justify-center lg:justify-start gap-4">
+                          <span className="text-white/60 line-through text-lg">
+                            ${ad.originalPrice.toFixed(2)}
+                          </span>
+                          <span className="text-3xl sm:text-4xl font-bold text-white">
+                            ${ad.salePrice.toFixed(2)}
+                          </span>
+                          <motion.span
+                            className="bg-yellow-400 text-yellow-900 px-3 py-1 rounded-full text-sm font-bold"
+                            animate={{ scale: [1, 1.05, 1] }}
+                            transition={{ duration: 1, repeat: Infinity }}
+                          >
+                            -{ad.discountPercent}%
+                          </motion.span>
+                        </div>
+                        <p className="text-white/70 text-sm mt-1">
+                          {language === 'ar' ? `وفر $${ad.discount.toFixed(2)}` : `Save $${ad.discount.toFixed(2)}`}
+                        </p>
+                      </div>
+
+                      {/* Right Side - CTA Button */}
+                      <motion.div
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                      >
+                        <div className="flex flex-col items-center gap-3">
+                          <div className="bg-white text-gray-900 px-8 py-4 rounded-xl font-bold text-lg shadow-lg hover:bg-yellow-50 transition-colors flex items-center gap-2">
+                            <Gift className="w-5 h-5" />
+                            {language === 'ar' ? 'احصل على العرض' : 'Get This Deal'}
+                          </div>
+                          <div className="flex items-center gap-1 text-white/70 text-xs">
+                            <ExternalLink className="w-3 h-3" />
+                            {language === 'ar' ? 'سينتهي عند مغادرة الصفحة' : 'Ends when you leave this page'}
+                          </div>
+                        </div>
+                      </motion.div>
+                    </div>
+                  </div>
+
+                  {/* Urgency Bar */}
+                  <div className="bg-black/20 px-6 py-3 flex items-center justify-center gap-2 text-white/80 text-sm">
+                    <motion.div
+                      animate={{ scale: [1, 1.2, 1] }}
+                      transition={{ duration: 1, repeat: Infinity }}
+                    >
+                      <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                    </motion.div>
+                    <span>
+                      {language === 'ar' 
+                        ? '⚡ عرض حصري للمستخدمين المميزين - لا تفوت هذه الفرصة!'
+                        : '⚡ Exclusive offer for premium users - Don\'t miss this opportunity!'}
+                    </span>
+                    <motion.div
+                      animate={{ scale: [1, 1.2, 1] }}
+                      transition={{ duration: 1, repeat: Infinity }}
+                    >
+                      <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                    </motion.div>
+                  </div>
+                </motion.a>
+              </motion.div>
+            )
+          ))}
+        </AnimatePresence>
+
+        {/* Ad Indicators */}
+        <div className="flex justify-center gap-2 mt-4">
+          {ads.map((ad, index) => (
+            <button
+              key={ad.id}
+              onClick={() => setCurrentAd(index)}
+              className={`
+                w-3 h-3 rounded-full transition-all duration-300
+                ${currentAd === index 
+                  ? `bg-gradient-to-r ${ad.gradient} w-8` 
+                  : 'bg-muted-foreground/30 hover:bg-muted-foreground/50'
+                }
+              `}
+            />
+          ))}
+        </div>
+      </div>
+    </section>
   );
 }
