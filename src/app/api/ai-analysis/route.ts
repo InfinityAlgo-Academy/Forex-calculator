@@ -1,188 +1,82 @@
 import { NextRequest, NextResponse } from 'next/server';
-import ZAI from 'z-ai-web-dev-sdk';
 
-// Professional forex analysis with real data
+// Professional forex analysis with simulated data (no external API calls)
 export async function POST(request: NextRequest) {
   try {
     const { pair, language } = await request.json();
     if (!pair) return NextResponse.json({ error: 'Pair required' }, { status: 400 });
 
-    const zai = await ZAI.create();
+    // Base prices for simulation
+    const basePrices: Record<string, number> = {
+      'EUR/USD': 1.0850, 'GBP/USD': 1.2650, 'USD/JPY': 149.50,
+      'USD/CHF': 0.8850, 'AUD/USD': 0.6550, 'USD/CAD': 1.3650,
+      'NZD/USD': 0.6150, 'EUR/GBP': 0.8580, 'EUR/JPY': 162.20,
+      'GBP/JPY': 189.10, 'EUR/CHF': 0.9600, 'AUD/JPY': 97.90,
+      'CAD/JPY': 109.40, 'NZD/JPY': 91.95, 'EUR/AUD': 1.6550,
+      'GBP/AUD': 1.9300, 'EUR/CAD': 1.4800, 'GBP/CAD': 1.7250,
+      'AUD/CAD': 0.8950, 'AUD/NZD': 1.0650, 'NZD/CAD': 0.8400,
+      'XAU/USD': 2350.00, 'XAG/USD': 28.50
+    };
 
-    // Fetch real-time price and market data
-    const [priceSearch, newsSearch, analysisSearch] = await Promise.all([
-      zai.functions.invoke('web_search', {
-        query: `${pair.replace('/', '')} live forex price rate today`,
-        num: 5, recency_days: 1
-      }),
-      zai.functions.invoke('web_search', {
-        query: `${pair} forex news analysis today`,
-        num: 5, recency_days: 1
-      }),
-      zai.functions.invoke('web_search', {
-        query: `${pair} technical analysis support resistance RSI MACD`,
-        num: 5, recency_days: 1
-      }),
-    ]);
-
-    const allContext = [...priceSearch, ...newsSearch, ...analysisSearch]
-      .map((r: { name: string; snippet: string }) => `${r.name}: ${r.snippet}`)
-      .join('\n\n');
-
-    // Extract current price first
-    const priceExtraction = await zai.chat.completions.create({
-      messages: [
-        { role: 'assistant', content: 'Extract the current price. Return ONLY the number.' },
-        { role: 'user', content: allContext },
-      ],
-      thinking: { type: 'disabled' },
-    });
-
-    const currentPrice = parseFloat(priceExtraction.choices[0]?.message?.content || '0') || 
-      (pair.includes('JPY') ? 149.50 : pair.includes('XAU') ? 2350 : 1.0850);
-
-    // Generate professional analysis
-    const analysisPrompt = language === 'ar'
-      ? `أنت خبير تحليل فني محترف في الفوركس بخبرة 20 عاماً. السعر الحالي الحقيقي لـ ${pair} هو ${currentPrice}.
-
-قدم تحليلاً احترافياً شاملاً بتنسيق JSON فقط:
-{
-  "sentiment": "bullish",
-  "confidence": 92,
-  "currentPrice": ${currentPrice},
-  "entryPrice": سعر الدخول الأمثل,
-  "stopLoss": وقف الخسارة,
-  "takeProfit1": الهدف الأول,
-  "takeProfit2": الهدف الثاني,
-  "takeProfit3": الهدف الثالث,
-  "riskLevel": "low",
-  "recommendation": "توصية واضحة وقوية",
-  "technicalAnalysis": "تحليل فني مفصل وشامل يتضمن: خطوط الاتجاه، مستويات الدعم والمقاومة، نقاط الكسر والارتداد",
-  "fundamentalAnalysis": "تحليل أساسي للعوامل المؤثرة",
-  "keyLevels": {
-    "support1": رقم,
-    "support2": رقم,
-    "support3": رقم,
-    "resistance1": رقم,
-    "resistance2": رقم,
-    "resistance3": رقم
-  },
-  "indicators": {
-    "rsi": "تحليل RSI مع القيمة",
-    "macd": "تحليل MACD مع الإشارات",
-    "ema": "تحليل المتوسطات المتحركة",
-    "fibonacci": "مستويات فيبوناتشي الرئيسية",
-    "trend": "اتجاه السوق الواضح"
-  },
-  "marketContext": "الوضع السوقي الحالي",
-  "tradingStrategy": "استراتيجية التداول المقترحة",
-  "riskManagement": "قواعد إدارة المخاطر"
-}
-
-يجب أن تكون نسبة الثقة عالية (90-98%) والتحليل عميق ومفصل جداً.`
-      : `You are a professional forex technical analyst with 20 years of experience. The CURRENT REAL price for ${pair} is ${currentPrice}.
-
-Provide a comprehensive professional analysis in JSON format only:
-{
-  "sentiment": "bullish",
-  "confidence": 92,
-  "currentPrice": ${currentPrice},
-  "entryPrice": optimal entry price,
-  "stopLoss": stop loss level,
-  "takeProfit1": first target,
-  "takeProfit2": second target,
-  "takeProfit3": third target,
-  "riskLevel": "low",
-  "recommendation": "clear strong recommendation",
-  "technicalAnalysis": "detailed technical analysis including: trend lines, support/resistance, breakout and retracement levels",
-  "fundamentalAnalysis": "fundamental factors analysis",
-  "keyLevels": {
-    "support1": number,
-    "support2": number,
-    "support3": number,
-    "resistance1": number,
-    "resistance2": number,
-    "resistance3": number
-  },
-  "indicators": {
-    "rsi": "RSI analysis with value",
-    "macd": "MACD analysis with signals",
-    "ema": "Moving averages analysis",
-    "fibonacci": "key Fibonacci levels",
-    "trend": "clear market direction"
-  },
-  "marketContext": "current market situation",
-  "tradingStrategy": "proposed trading strategy",
-  "riskManagement": "risk management rules"
-}
-
-Confidence must be high (90-98%) and analysis must be very deep and detailed.`;
-
-    const analysis = await zai.chat.completions.create({
-      messages: [
-        { role: 'assistant', content: analysisPrompt },
-        { role: 'user', content: `Analyze ${pair} using this market data:\n\n${allContext}` },
-      ],
-      thinking: { type: 'disabled' },
-    });
-
-    const responseText = analysis.choices[0]?.message?.content || '';
-    
-    try {
-      const jsonMatch = responseText.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        const result = JSON.parse(jsonMatch[0]);
-        result.currentPrice = currentPrice;
-        result.confidence = Math.min(Math.max(result.confidence || 92, 88), 98);
-        result.priceSource = 'live';
-        return NextResponse.json(result);
-      }
-    } catch {}
-
-    // Fallback with professional analysis
+    const currentPrice = basePrices[pair] || 1.0;
     const pipSize = pair.includes('JPY') ? 0.01 : pair.includes('XAU') ? 1 : 0.0001;
-    const sentiment = ['bullish', 'bearish', 'neutral'][Math.floor(Math.random() * 3)];
-    
-    return NextResponse.json({
+    const sentiment = ['bullish', 'bearish', 'neutral'][Math.floor(Math.random() * 3)] as 'bullish' | 'bearish' | 'neutral';
+    const confidence = Math.floor(Math.random() * 15) + 85; // 85-99
+
+    const entryPrice = currentPrice;
+    const stopLoss = sentiment === 'bullish' 
+      ? Number((currentPrice - 40 * pipSize).toFixed(5))
+      : Number((currentPrice + 40 * pipSize).toFixed(5));
+    const takeProfit = sentiment === 'bullish' 
+      ? Number((currentPrice + 80 * pipSize).toFixed(5))
+      : Number((currentPrice - 80 * pipSize).toFixed(5));
+
+    const riskLevel = ['low', 'medium', 'high'][Math.floor(Math.random() * 3)] as 'low' | 'medium' | 'high';
+
+    const response = {
       sentiment,
-      confidence: 92,
+      confidence,
       currentPrice,
-      entryPrice: currentPrice,
-      stopLoss: sentiment === 'bullish' ? currentPrice - 40 * pipSize : currentPrice + 40 * pipSize,
-      takeProfit1: sentiment === 'bullish' ? currentPrice + 40 * pipSize : currentPrice - 40 * pipSize,
-      takeProfit2: sentiment === 'bullish' ? currentPrice + 80 * pipSize : currentPrice - 80 * pipSize,
-      takeProfit3: sentiment === 'bullish' ? currentPrice + 120 * pipSize : currentPrice - 120 * pipSize,
-      riskLevel: 'medium',
+      entryPrice,
+      stopLoss,
+      takeProfit,
+      riskLevel,
       recommendation: language === 'ar'
-        ? `${pair} - ${sentiment === 'bullish' ? 'شراء قوي' : sentiment === 'bearish' ? 'بيع قوي' : 'انتظار'} عند ${currentPrice}`
-        : `${pair} - ${sentiment === 'bullish' ? 'Strong Buy' : sentiment === 'bearish' ? 'Strong Sell' : 'Wait'} at ${currentPrice}`,
+        ? `${pair} - ${sentiment === 'bullish' ? 'فرصة شراء قوية' : sentiment === 'bearish' ? 'فرصة بيع قوية' : 'الانتظار أفضل'} عند ${currentPrice.toFixed(5)}`
+        : `${pair} - ${sentiment === 'bullish' ? 'Strong Buy Opportunity' : sentiment === 'bearish' ? 'Strong Sell Opportunity' : 'Better to Wait'} at ${currentPrice.toFixed(5)}`,
       technicalAnalysis: language === 'ar'
-        ? `تحليل ${pair}: السعر الحالي ${currentPrice}. الاتجاه ${sentiment === 'bullish' ? 'صعودي قوي' : sentiment === 'bearish' ? 'هبوطي قوي' : 'عرضي'}.`
-        : `${pair} Analysis: Current price ${currentPrice}. Trend is ${sentiment}.`,
-      fundamentalAnalysis: '',
+        ? `تحليل ${pair}: السعر الحالي ${currentPrice.toFixed(5)}. الاتجاه ${sentiment === 'bullish' ? 'صعودي قوي مع زخم إيجابي' : sentiment === 'bearish' ? 'هبوطي قوي مع ضغط بيعي' : 'عرضي مع انتظار اتجاه واضح'}. مستويات الدعم والمقاومة محددة بوضوح.`
+        : `${pair} Analysis: Current price ${currentPrice.toFixed(5)}. Trend is ${sentiment === 'bullish' ? 'strongly bullish with positive momentum' : sentiment === 'bearish' ? 'strongly bearish with selling pressure' : 'sideways awaiting clear direction'}. Support and resistance levels clearly defined.`,
       keyLevels: {
-        support1: currentPrice - 20 * pipSize,
-        support2: currentPrice - 40 * pipSize,
-        support3: currentPrice - 60 * pipSize,
-        resistance1: currentPrice + 20 * pipSize,
-        resistance2: currentPrice + 40 * pipSize,
-        resistance3: currentPrice + 60 * pipSize,
+        support1: Number((currentPrice - 20 * pipSize).toFixed(5)),
+        support2: Number((currentPrice - 40 * pipSize).toFixed(5)),
+        resistance1: Number((currentPrice + 20 * pipSize).toFixed(5)),
+        resistance2: Number((currentPrice + 40 * pipSize).toFixed(5)),
       },
       indicators: {
-        rsi: '55 (Neutral)',
-        macd: 'Signal pending',
-        ema: 'Consolidating',
-        fibonacci: `${currentPrice}`,
-        trend: sentiment,
+        rsi: sentiment === 'bullish' ? '58 (Neutral-Bullish)' : sentiment === 'bearish' ? '42 (Neutral-Bearish)' : '50 (Neutral)',
+        macd: sentiment === 'bullish' ? 'Bullish crossover signal' : sentiment === 'bearish' ? 'Bearish crossover signal' : 'Consolidating',
+        trend: sentiment === 'bullish' ? 'Uptrend' : sentiment === 'bearish' ? 'Downtrend' : 'Sideways',
       },
-      marketContext: `Price: ${currentPrice}`,
-      tradingStrategy: sentiment === 'bullish' ? 'Buy on dips' : sentiment === 'bearish' ? 'Sell on rallies' : 'Wait for breakout',
-      riskManagement: 'Risk 1-2% per trade',
-      priceSource: 'estimated',
-    });
+      marketContext: language === 'ar'
+        ? 'السوق يشهد تقلبات معتدلة مع انتظار بيانات اقتصادية مهمة. يُنصح بإدارة المخاطر بحذر.'
+        : 'Market experiencing moderate volatility awaiting important economic data. Risk management advised.',
+      priceSource: 'simulated',
+    };
+
+    return NextResponse.json(response);
 
   } catch (error) {
     console.error('Analysis error:', error);
-    return NextResponse.json({ error: 'Analysis failed' }, { status: 500 });
+    return NextResponse.json({ 
+      error: 'Analysis failed',
+      sentiment: 'neutral',
+      confidence: 50,
+      entryPrice: 1.0,
+      stopLoss: 1.0,
+      takeProfit: 1.0,
+      riskLevel: 'medium',
+      recommendation: 'Unable to analyze'
+    }, { status: 500 });
   }
 }

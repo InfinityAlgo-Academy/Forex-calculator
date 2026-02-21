@@ -1,81 +1,61 @@
 import { NextRequest, NextResponse } from 'next/server';
-import ZAI from 'z-ai-web-dev-sdk';
 
-// Real forex prices fetched from web
+// Realistic forex prices with small variations
+const basePrices: Record<string, number> = {
+  'EUR/USD': 1.0850,
+  'GBP/USD': 1.2650,
+  'USD/JPY': 149.50,
+  'USD/CHF': 0.8850,
+  'AUD/USD': 0.6550,
+  'USD/CAD': 1.3650,
+  'NZD/USD': 0.6150,
+  'EUR/GBP': 0.8580,
+  'EUR/JPY': 162.20,
+  'GBP/JPY': 189.10,
+  'EUR/CHF': 0.9600,
+  'AUD/JPY': 97.90,
+  'CAD/JPY': 109.40,
+  'NZD/JPY': 91.95,
+  'EUR/AUD': 1.6550,
+  'GBP/AUD': 1.9300,
+  'EUR/CAD': 1.4800,
+  'GBP/CAD': 1.7250,
+  'AUD/CAD': 0.8950,
+  'AUD/NZD': 1.0650,
+  'NZD/CAD': 0.8400,
+  'XAU/USD': 2350.00,
+  'XAG/USD': 28.50,
+  'BTC/USD': 67500.00,
+  'ETH/USD': 3450.00
+};
+
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
-  const pairs = searchParams.get('pairs')?.split(',') || ['EUR/USD', 'GBP/USD', 'USD/JPY'];
+  const pairs = searchParams.get('pairs')?.split(',') || Object.keys(basePrices);
 
   try {
-    const zai = await ZAI.create();
-    
-    // Search for real forex prices
-    const searchQuery = `forex rates today ${pairs.slice(0, 5).join(' ').replace(/\//g, '')} live prices`;
-    
-    const searchResults = await zai.functions.invoke('web_search', {
-      query: searchQuery,
-      num: 8,
-      recency_days: 1,
-    });
-
-    // Use AI to extract all prices
-    const contextText = searchResults
-      .map((r: { name: string; snippet: string }) => `${r.name}: ${r.snippet}`)
-      .join('\n');
-
-    const priceExtraction = await zai.chat.completions.create({
-      messages: [
-        {
-          role: 'assistant',
-          content: `Extract current forex prices. Return ONLY JSON like: {"EUR/USD": 1.0850, "GBP/USD": 1.2650}`,
-        },
-        {
-          role: 'user',
-          content: `Extract prices from:\n${contextText}\n\nInclude: ${pairs.join(', ')}`,
-        },
-      ],
-      thinking: { type: 'disabled' },
-    });
-
-    const responseText = priceExtraction.choices[0]?.message?.content || '{}';
-    
-    try {
-      const jsonMatch = responseText.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        const prices = JSON.parse(jsonMatch[0]);
-        return NextResponse.json({
-          success: true,
-          prices,
-          timestamp: new Date().toISOString(),
-          source: 'live',
-        });
-      }
-    } catch {
-      // Continue to fallback
-    }
-
-    // Fallback with realistic prices
-    const fallbackPrices: Record<string, number> = {};
-    const basePrices: Record<string, number> = {
-      'EUR/USD': 1.0850, 'GBP/USD': 1.2650, 'USD/JPY': 149.50,
-      'USD/CHF': 0.8850, 'AUD/USD': 0.6550, 'USD/CAD': 1.3650,
-      'NZD/USD': 0.6150, 'EUR/GBP': 0.8580, 'EUR/JPY': 162.20,
-      'GBP/JPY': 189.10, 'XAU/USD': 2350.00,
-    };
+    // Generate realistic prices with small random variations
+    const prices: Record<string, number> = {};
     
     pairs.forEach(pair => {
       const base = basePrices[pair] || 1.0;
-      fallbackPrices[pair] = Number((base + (Math.random() - 0.5) * base * 0.001).toFixed(5));
+      // Add small random variation (±0.1%)
+      const variation = (Math.random() - 0.5) * base * 0.002;
+      prices[pair] = Number((base + variation).toFixed(5));
     });
 
     return NextResponse.json({
       success: true,
-      prices: fallbackPrices,
+      prices,
       timestamp: new Date().toISOString(),
-      source: 'estimated',
+      source: 'simulated',
     });
 
   } catch (error) {
-    return NextResponse.json({ success: false, prices: {}, error: 'Failed' });
+    return NextResponse.json({ 
+      success: false, 
+      prices: basePrices, 
+      error: 'Failed to fetch prices' 
+    });
   }
 }

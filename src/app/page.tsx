@@ -1846,19 +1846,19 @@ function AIAnalysisSection({ t, language }: { t: (key: string) => string; langua
                   <Card className="bg-success/5 border-success/30">
                     <CardContent className="p-4 text-center">
                       <p className="text-sm text-muted-foreground">{t('entryRecommendation')}</p>
-                      <p className="text-2xl font-bold text-success">{analysis.entryPrice.toFixed(5)}</p>
+                      <p className="text-2xl font-bold text-success">{analysis.entryPrice?.toFixed(5) || '-'}</p>
                     </CardContent>
                   </Card>
                   <Card className="bg-destructive/5 border-destructive/30">
                     <CardContent className="p-4 text-center">
                       <p className="text-sm text-muted-foreground">{t('stopLossRecommendation')}</p>
-                      <p className="text-2xl font-bold text-destructive">{analysis.stopLoss.toFixed(5)}</p>
+                      <p className="text-2xl font-bold text-destructive">{analysis.stopLoss?.toFixed(5) || '-'}</p>
                     </CardContent>
                   </Card>
                   <Card className="bg-primary/5 border-primary/30">
                     <CardContent className="p-4 text-center">
                       <p className="text-sm text-muted-foreground">{t('targetPrice')}</p>
-                      <p className="text-2xl font-bold text-primary">{analysis.takeProfit.toFixed(5)}</p>
+                      <p className="text-2xl font-bold text-primary">{analysis.takeProfit?.toFixed(5) || '-'}</p>
                     </CardContent>
                   </Card>
                 </div>
@@ -1911,19 +1911,19 @@ function AIAnalysisSection({ t, language }: { t: (key: string) => string; langua
                     <div className="grid grid-cols-2 gap-3">
                       <div className="p-3 rounded-lg bg-success/10 border border-success/20">
                         <p className="text-xs text-muted-foreground">{language === 'ar' ? 'الدعم 1' : 'Support 1'}</p>
-                        <p className="font-bold text-success">{analysis.keyLevels.support1.toFixed(5)}</p>
+                        <p className="font-bold text-success">{analysis.keyLevels.support1?.toFixed(5) || '-'}</p>
                       </div>
                       <div className="p-3 rounded-lg bg-success/10 border border-success/20">
                         <p className="text-xs text-muted-foreground">{language === 'ar' ? 'الدعم 2' : 'Support 2'}</p>
-                        <p className="font-bold text-success">{analysis.keyLevels.support2.toFixed(5)}</p>
+                        <p className="font-bold text-success">{analysis.keyLevels.support2?.toFixed(5) || '-'}</p>
                       </div>
                       <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/20">
                         <p className="text-xs text-muted-foreground">{language === 'ar' ? 'المقاومة 1' : 'Resistance 1'}</p>
-                        <p className="font-bold text-destructive">{analysis.keyLevels.resistance1.toFixed(5)}</p>
+                        <p className="font-bold text-destructive">{analysis.keyLevels.resistance1?.toFixed(5) || '-'}</p>
                       </div>
                       <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/20">
                         <p className="text-xs text-muted-foreground">{language === 'ar' ? 'المقاومة 2' : 'Resistance 2'}</p>
-                        <p className="font-bold text-destructive">{analysis.keyLevels.resistance2.toFixed(5)}</p>
+                        <p className="font-bold text-destructive">{analysis.keyLevels.resistance2?.toFixed(5) || '-'}</p>
                       </div>
                     </div>
                   </div>
@@ -1976,15 +1976,15 @@ function AIAnalysisSection({ t, language }: { t: (key: string) => string; langua
                   </p>
                   <p className="text-xs text-muted-foreground">
                     {language === 'ar' 
-                      ? `الدخول: ${analysis.entryPrice.toFixed(5)} | الوقف: ${analysis.stopLoss.toFixed(5)} | الهدف: ${analysis.takeProfit.toFixed(5)}`
-                      : `Entry: ${analysis.entryPrice.toFixed(5)} | SL: ${analysis.stopLoss.toFixed(5)} | TP: ${analysis.takeProfit.toFixed(5)}`}
+                      ? `الدخول: ${analysis.entryPrice?.toFixed(5) || '-'} | الوقف: ${analysis.stopLoss?.toFixed(5) || '-'} | الهدف: ${analysis.takeProfit?.toFixed(5) || '-'}`
+                      : `Entry: ${analysis.entryPrice?.toFixed(5) || '-'} | SL: ${analysis.stopLoss?.toFixed(5) || '-'} | TP: ${analysis.takeProfit?.toFixed(5) || '-'}`}
                   </p>
                   <div className="mt-2 flex justify-center gap-2">
                     <Badge variant="outline" className="border-success text-success">
-                      {language === 'ar' ? 'مخاطرة: ' : 'Risk: '}{Math.abs(analysis.entryPrice - analysis.stopLoss).toFixed(5)}
+                      {language === 'ar' ? 'مخاطرة: ' : 'Risk: '}{analysis.entryPrice && analysis.stopLoss ? Math.abs(analysis.entryPrice - analysis.stopLoss).toFixed(5) : '-'}
                     </Badge>
                     <Badge variant="outline" className="border-primary text-primary">
-                      {language === 'ar' ? 'مكافأة: ' : 'Reward: '}{Math.abs(analysis.takeProfit - analysis.entryPrice).toFixed(5)}
+                      {language === 'ar' ? 'مكافأة: ' : 'Reward: '}{analysis.takeProfit && analysis.entryPrice ? Math.abs(analysis.takeProfit - analysis.entryPrice).toFixed(5) : '-'}
                     </Badge>
                   </div>
                 </div>
