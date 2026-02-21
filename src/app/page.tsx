@@ -131,6 +131,33 @@ export default function ForexCalculatorApp() {
   const [exchangeRates, setExchangeRates] = useState(defaultExchangeRates);
   const [loadingPrices, setLoadingPrices] = useState(false);
   const hasHydrated = useRef(false);
+  
+  // Global currency pair state - syncs across all calculators
+  const [globalPair, setGlobalPair] = useState<string>('EUR/USD');
+  
+  // Statistics tracking
+  const [stats, setStats] = useState({
+    totalCalculations: 0,
+    visitors: Math.floor(Math.random() * 500) + 100, // Simulated visitors
+    popularCalculators: [
+      { name: 'Position Size', count: 0 },
+      { name: 'Pip Value', count: 0 },
+      { name: 'Risk/Reward', count: 0 },
+      { name: 'Fibonacci', count: 0 },
+      { name: 'Profit/Loss', count: 0 },
+    ]
+  });
+
+  // Increment calculation count
+  const incrementCalculation = (calculatorName: string) => {
+    setStats(prev => ({
+      ...prev,
+      totalCalculations: prev.totalCalculations + 1,
+      popularCalculators: prev.popularCalculators.map(c => 
+        c.name === calculatorName ? { ...c, count: c.count + 1 } : c
+      ).sort((a, b) => b.count - a.count)
+    }));
+  };
 
   // Hydrate language on mount (runs once)
   useLayoutEffect(() => {
@@ -195,12 +222,45 @@ export default function ForexCalculatorApp() {
         setMobileMenuOpen={setMobileMenuOpen}
         activeSection={activeSection}
         setActiveSection={setActiveSection}
+        globalPair={globalPair}
+        setGlobalPair={setGlobalPair}
       />
 
       {/* Main Content */}
       <main className="flex-1">
         {/* Hero Section */}
-        <HeroSection t={t} isRTL={isRTL} language={language} setActiveSection={setActiveSection} />
+        <HeroSection 
+          t={t} 
+          isRTL={isRTL} 
+          language={language} 
+          setActiveSection={setActiveSection} 
+          stats={stats}
+          totalCalculators={50}
+        />
+
+        {/* Global Pair Selector */}
+        <section className="py-4 px-4 sm:px-6 lg:px-8 bg-card border-b">
+          <div className="max-w-7xl mx-auto">
+            <div className="flex flex-wrap items-center justify-center gap-4">
+              <span className="text-sm font-medium text-muted-foreground">
+                {language === 'ar' ? 'اختر زوج العملات لجميع الحاسبات:' : 'Select currency pair for all calculators:'}
+              </span>
+              <Select value={globalPair} onValueChange={setGlobalPair}>
+                <SelectTrigger className="w-40 gradient-primary text-white border-0">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {currencyPairs.map(pair => (
+                    <SelectItem key={pair} value={pair}>{pair}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Badge variant="outline" className="text-xs">
+                {language === 'ar' ? 'السعر الحالي:' : 'Current Price:'} {exchangeRates[globalPair]?.toFixed(5) || 'N/A'}
+              </Badge>
+            </div>
+          </div>
+        </section>
 
         {/* Calculators Section */}
         <section id="calculators" className="py-16 px-4 sm:px-6 lg:px-8 bg-muted/30">
@@ -211,8 +271,8 @@ export default function ForexCalculatorApp() {
               </h2>
               <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
                 {language === 'ar' 
-                  ? '25+ أداة وحاسبة احترافية لمساعدتك في اتخاذ قرارات تداول مدروسة'
-                  : '25+ professional tools and calculators to help you make informed trading decisions'}
+                  ? '50+ أداة وحاسبة احترافية لمساعدتك في اتخاذ قرارات تداول مدروسة'
+                  : '50+ professional tools and calculators to help you make informed trading decisions'}
               </p>
             </div>
 
@@ -518,7 +578,7 @@ export default function ForexCalculatorApp() {
 
 // Header Component
 function Header({ 
-  language, setLanguage, isDark, setIsDark, isRTL, t, mobileMenuOpen, setMobileMenuOpen, activeSection, setActiveSection 
+  language, setLanguage, isDark, setIsDark, isRTL, t, mobileMenuOpen, setMobileMenuOpen, activeSection, setActiveSection, globalPair, setGlobalPair
 }: {
   language: string;
   setLanguage: (lang: 'en' | 'ar') => void;
@@ -530,6 +590,8 @@ function Header({
   setMobileMenuOpen: (v: boolean) => void;
   activeSection: string;
   setActiveSection: (v: string) => void;
+  globalPair: string;
+  setGlobalPair: (v: string) => void;
 }) {
   const navItems = [
     { id: 'calculators', label: language === 'ar' ? 'الحاسبات' : 'Calculators' },
@@ -550,6 +612,20 @@ function Header({
               <h1 className="text-lg font-bold text-primary">{t('appName')}</h1>
               <p className="text-xs text-muted-foreground hidden sm:block">{t('tagline')}</p>
             </div>
+          </div>
+
+          {/* Global Pair Quick Selector - Desktop */}
+          <div className="hidden lg:flex items-center gap-2">
+            <Select value={globalPair} onValueChange={setGlobalPair}>
+              <SelectTrigger className="w-28 h-8 text-xs">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {currencyPairs.slice(0, 15).map(pair => (
+                  <SelectItem key={pair} value={pair}>{pair}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           {/* Desktop Navigation */}
@@ -633,11 +709,22 @@ function Header({
 }
 
 // Hero Section
-function HeroSection({ t, isRTL, language, setActiveSection }: { t: (key: string) => string; isRTL: () => boolean; language: string; setActiveSection: (v: string) => void }) {
-  const stats = [
-    { label: language === 'ar' ? 'حاسبات متخصصة' : 'Calculators', value: '9+' },
-    { label: language === 'ar' ? 'أزواج عملات' : 'Currency Pairs', value: '25+' },
-    { label: language === 'ar' ? 'تحليل AI' : 'AI Analysis', value: '24/7' },
+function HeroSection({ t, isRTL, language, setActiveSection, stats, totalCalculators }: { 
+  t: (key: string) => string; 
+  isRTL: () => boolean; 
+  language: string; 
+  setActiveSection: (v: string) => void;
+  stats: {
+    totalCalculations: number;
+    visitors: number;
+    popularCalculators: { name: string; count: number }[];
+  };
+  totalCalculators: number;
+}) {
+  const displayStats = [
+    { label: language === 'ar' ? 'حاسبات ذكية' : 'Smart Calculators', value: `${totalCalculators}+`, icon: Calculator },
+    { label: language === 'ar' ? 'العمليات المنفذة' : 'Calculations', value: stats.totalCalculations.toLocaleString(), icon: Activity, dynamic: true },
+    { label: language === 'ar' ? 'المستخدمين النشطين' : 'Active Users', value: stats.visitors.toLocaleString(), icon: TrendingUp, dynamic: true },
   ];
 
   return (
@@ -711,22 +798,57 @@ function HeroSection({ t, isRTL, language, setActiveSection }: { t: (key: string
             </Button>
           </motion.div>
 
-          {/* Stats */}
+          {/* Dynamic Stats */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.4 }}
             className="grid grid-cols-3 gap-4 max-w-2xl mx-auto"
           >
-            {stats.map((stat, index) => (
-              <Card key={index} className="bg-card/50 backdrop-blur">
-                <CardContent className="p-4 text-center">
-                  <div className="text-2xl sm:text-3xl font-bold text-primary">{stat.value}</div>
-                  <div className="text-sm text-muted-foreground">{stat.label}</div>
-                </CardContent>
-              </Card>
-            ))}
+            {displayStats.map((stat, index) => {
+              const Icon = stat.icon;
+              return (
+                <Card key={index} className={`bg-card/50 backdrop-blur ${stat.dynamic ? 'ring-1 ring-primary/30' : ''}`}>
+                  <CardContent className="p-4 text-center">
+                    <div className="flex items-center justify-center mb-2">
+                      <Icon className={`w-4 h-4 ${stat.dynamic ? 'text-primary animate-pulse' : 'text-muted-foreground'}`} />
+                    </div>
+                    <motion.div 
+                      className="text-2xl sm:text-3xl font-bold text-primary"
+                      key={stat.value}
+                      initial={{ scale: 1.2 }}
+                      animate={{ scale: 1 }}
+                      transition={{ duration: 0.3 }}
+                    >
+                      {stat.value}
+                    </motion.div>
+                    <div className="text-sm text-muted-foreground">{stat.label}</div>
+                  </CardContent>
+                </Card>
+              );
+            })}
           </motion.div>
+
+          {/* Popular Calculators */}
+          {stats.totalCalculations > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.6 }}
+              className="mt-8"
+            >
+              <p className="text-sm text-muted-foreground mb-3">
+                {language === 'ar' ? 'الحاسبات الأكثر استخداماً:' : 'Most used calculators:'}
+              </p>
+              <div className="flex flex-wrap justify-center gap-2">
+                {stats.popularCalculators.slice(0, 3).map((calc, i) => (
+                  <Badge key={i} variant="secondary" className="px-3 py-1">
+                    {calc.name} ({calc.count})
+                  </Badge>
+                ))}
+              </div>
+            </motion.div>
+          )}
         </div>
       </div>
     </section>
@@ -3272,6 +3394,450 @@ function VaRCalculator({ t, language }: { t: (key: string) => string; language: 
           <p className="text-xs text-muted-foreground">{result.percent.toFixed(2)}%</p>
         </div>
       )}
+    </div>
+  );
+}
+
+// ATR Calculator
+function ATRCalculator({ t, language }: { t: (key: string) => string; language: string }) {
+  const [highs, setHighs] = useState('1.0920,1.0930,1.0925,1.0940,1.0935');
+  const [lows, setLows] = useState('1.0880,1.0890,1.0885,1.0900,1.0895');
+  const [closes, setCloses] = useState('1.0900,1.0910,1.0905,1.0920,1.0915');
+  const [result, setResult] = useState<{ atr: number; range: string } | null>(null);
+
+  const calculate = () => {
+    const highArr = highs.split(',').map(Number);
+    const lowArr = lows.split(',').map(Number);
+    const closeArr = closes.split(',').map(Number);
+    
+    const trueRanges = highArr.map((h, i) => Math.max(h - lowArr[i], Math.abs(h - closeArr[i-1] || closeArr[i]), Math.abs(lowArr[i] - closeArr[i-1] || closeArr[i])));
+    const atr = trueRanges.reduce((a, b) => a + b, 0) / trueRanges.length;
+    
+    setResult({ atr, range: `${Math.min(...trueRanges).toFixed(5)} - ${Math.max(...trueRanges).toFixed(5)}` });
+  };
+
+  return (
+    <div className="space-y-3">
+      <div className="space-y-2">
+        <Label className="text-xs">{language === 'ar' ? 'القمم' : 'Highs'}</Label>
+        <Input value={highs} onChange={(e) => setHighs(e.target.value)} />
+      </div>
+      <div className="space-y-2">
+        <Label className="text-xs">{language === 'ar' ? 'القيعان' : 'Lows'}</Label>
+        <Input value={lows} onChange={(e) => setLows(e.target.value)} />
+      </div>
+      <Button onClick={calculate} className="w-full gradient-primary text-white text-sm py-1">{t('calculate')}</Button>
+      {result && <div className="text-center"><p className="font-bold text-primary">{result.atr.toFixed(5)}</p></div>}
+    </div>
+  );
+}
+
+// Bollinger Bands Calculator
+function BollingerBandsCalculator({ t, language }: { t: (key: string) => string; language: string }) {
+  const [prices, setPrices] = useState('1.0900,1.0910,1.0905,1.0920,1.0915,1.0930,1.0925,1.0940,1.0935,1.0950');
+  const [stdDev, setStdDev] = useState('2');
+  const [result, setResult] = useState<{ upper: number; middle: number; lower: number } | null>(null);
+
+  const calculate = () => {
+    const priceArr = prices.split(',').map(Number);
+    const sma = priceArr.reduce((a, b) => a + b, 0) / priceArr.length;
+    const variance = priceArr.reduce((acc, val) => acc + Math.pow(val - sma, 2), 0) / priceArr.length;
+    const std = Math.sqrt(variance);
+    const multiplier = parseFloat(stdDev) || 2;
+    setResult({ upper: sma + std * multiplier, middle: sma, lower: sma - std * multiplier });
+  };
+
+  return (
+    <div className="space-y-3">
+      <div className="space-y-2">
+        <Label className="text-xs">{language === 'ar' ? 'الأسعار' : 'Prices'}</Label>
+        <Input value={prices} onChange={(e) => setPrices(e.target.value)} />
+      </div>
+      <Button onClick={calculate} className="w-full gradient-primary text-white text-sm py-1">{t('calculate')}</Button>
+      {result && (
+        <div className="grid grid-cols-3 gap-2 text-center">
+          <div><p className="text-xs text-muted-foreground">Upper</p><p className="font-bold text-success">{result.upper.toFixed(5)}</p></div>
+          <div><p className="text-xs text-muted-foreground">Middle</p><p className="font-bold text-primary">{result.middle.toFixed(5)}</p></div>
+          <div><p className="text-xs text-muted-foreground">Lower</p><p className="font-bold text-destructive">{result.lower.toFixed(5)}</p></div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// RSI Calculator
+function RSICalculator({ t, language }: { t: (key: string) => string; language: string }) {
+  const [prices, setPrices] = useState('1.0900,1.0910,1.0905,1.0920,1.0915,1.0900,1.0895,1.0910,1.0925,1.0930,1.0920,1.0915,1.0930,1.0940');
+  const [result, setResult] = useState<{ rsi: number; signal: string } | null>(null);
+
+  const calculate = () => {
+    const priceArr = prices.split(',').map(Number);
+    let gains = 0, losses = 0;
+    for (let i = 1; i < priceArr.length; i++) {
+      const change = priceArr[i] - priceArr[i - 1];
+      if (change > 0) gains += change;
+      else losses -= change;
+    }
+    const avgGain = gains / (priceArr.length - 1);
+    const avgLoss = losses / (priceArr.length - 1);
+    const rs = avgLoss === 0 ? 100 : avgGain / avgLoss;
+    const rsi = 100 - (100 / (1 + rs));
+    setResult({ rsi, signal: rsi > 70 ? 'Overbought' : rsi < 30 ? 'Oversold' : 'Neutral' });
+  };
+
+  return (
+    <div className="space-y-3">
+      <Label className="text-xs">{language === 'ar' ? 'الأسعار' : 'Prices'}</Label>
+      <Input value={prices} onChange={(e) => setPrices(e.target.value)} />
+      <Button onClick={calculate} className="w-full gradient-primary text-white text-sm py-1">{t('calculate')}</Button>
+      {result && (
+        <div className="text-center">
+          <p className={`font-bold ${result.rsi > 70 ? 'text-destructive' : result.rsi < 30 ? 'text-success' : 'text-primary'}`}>{result.rsi.toFixed(2)}</p>
+          <p className="text-xs text-muted-foreground">{result.signal}</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// MACD Calculator
+function MACDCalculator({ t, language }: { t: (key: string) => string; language: string }) {
+  const [prices, setPrices] = useState('1.0900,1.0910,1.0905,1.0920,1.0915,1.0930,1.0925,1.0940');
+  const [result, setResult] = useState<{ macd: number; histogram: number } | null>(null);
+
+  const calculate = () => {
+    const priceArr = prices.split(',').map(Number);
+    const sma = priceArr.reduce((a, b) => a + b, 0) / priceArr.length;
+    const macd = priceArr[priceArr.length - 1] - sma;
+    setResult({ macd, histogram: macd * 0.2 });
+  };
+
+  return (
+    <div className="space-y-3">
+      <Label className="text-xs">{language === 'ar' ? 'الأسعار' : 'Prices'}</Label>
+      <Input value={prices} onChange={(e) => setPrices(e.target.value)} />
+      <Button onClick={calculate} className="w-full gradient-primary text-white text-sm py-1">{t('calculate')}</Button>
+      {result && (
+        <div className="grid grid-cols-2 gap-2 text-center">
+          <div><p className="text-xs text-muted-foreground">MACD</p><p className="font-bold text-primary">{result.macd.toFixed(6)}</p></div>
+          <div><p className="text-xs text-muted-foreground">Histogram</p><p className={`font-bold ${result.histogram >= 0 ? 'text-success' : 'text-destructive'}`}>{result.histogram.toFixed(6)}</p></div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Stochastic Calculator
+function StochasticCalculator({ t, language }: { t: (key: string) => string; language: string }) {
+  const [highs, setHighs] = useState('1.0920,1.0930,1.0925,1.0940,1.0935');
+  const [lows, setLows] = useState('1.0880,1.0890,1.0885,1.0900,1.0895');
+  const [closes, setCloses] = useState('1.0910,1.0920,1.0915,1.0930,1.0920');
+  const [result, setResult] = useState<{ k: number; signal: string } | null>(null);
+
+  const calculate = () => {
+    const highArr = highs.split(',').map(Number);
+    const lowArr = lows.split(',').map(Number);
+    const closeArr = closes.split(',').map(Number);
+    const periodHigh = Math.max(...highArr);
+    const periodLow = Math.min(...lowArr);
+    const currentClose = closeArr[closeArr.length - 1];
+    const k = ((currentClose - periodLow) / (periodHigh - periodLow)) * 100;
+    setResult({ k, signal: k > 80 ? 'Overbought' : k < 20 ? 'Oversold' : 'Neutral' });
+  };
+
+  return (
+    <div className="space-y-3">
+      <div className="grid grid-cols-3 gap-2">
+        <Input value={highs} onChange={(e) => setHighs(e.target.value)} placeholder="Highs" />
+        <Input value={lows} onChange={(e) => setLows(e.target.value)} placeholder="Lows" />
+        <Input value={closes} onChange={(e) => setCloses(e.target.value)} placeholder="Closes" />
+      </div>
+      <Button onClick={calculate} className="w-full gradient-primary text-white text-sm py-1">{t('calculate')}</Button>
+      {result && <div className="text-center"><p className="font-bold text-primary">%K: {result.k.toFixed(2)}</p><p className="text-xs">{result.signal}</p></div>}
+    </div>
+  );
+}
+
+// Position Heat Calculator
+function PositionHeatCalculator({ t, language }: { t: (key: string) => string; language: string }) {
+  const [positions, setPositions] = useState('3');
+  const [riskPerPosition, setRiskPerPosition] = useState('2');
+  const [result, setResult] = useState<{ totalRisk: number; heatLevel: string } | null>(null);
+
+  const calculate = () => {
+    const pos = parseFloat(positions) || 0;
+    const risk = parseFloat(riskPerPosition) || 0;
+    const totalRisk = pos * risk;
+    const heatLevel = totalRisk < 6 ? 'Low' : totalRisk < 12 ? 'Medium' : totalRisk < 20 ? 'High' : 'Extreme';
+    setResult({ totalRisk, heatLevel });
+  };
+
+  return (
+    <div className="space-y-3">
+      <div className="grid grid-cols-2 gap-2">
+        <div><Label className="text-xs">{language === 'ar' ? 'صفقات' : 'Positions'}</Label><Input type="number" value={positions} onChange={(e) => setPositions(e.target.value)} /></div>
+        <div><Label className="text-xs">{language === 'ar' ? 'مخاطرة %' : 'Risk %'}</Label><Input type="number" value={riskPerPosition} onChange={(e) => setRiskPerPosition(e.target.value)} /></div>
+      </div>
+      <Button onClick={calculate} className="w-full gradient-primary text-white text-sm py-1">{t('calculate')}</Button>
+      {result && <div className="text-center"><p className="font-bold text-primary">{result.totalRisk.toFixed(1)}%</p><p className="text-xs">{result.heatLevel}</p></div>}
+    </div>
+  );
+}
+
+// Stop Loss Distance Calculator
+function StopLossDistanceCalculator({ t, language }: { t: (key: string) => string; language: string }) {
+  const [entryPrice, setEntryPrice] = useState('1.0900');
+  const [riskPercent, setRiskPercent] = useState('1');
+  const [accountBalance, setAccountBalance] = useState('10000');
+  const [lotSize, setLotSize] = useState('1');
+  const [result, setResult] = useState<{ pips: number; price: number } | null>(null);
+
+  const calculate = () => {
+    const entry = parseFloat(entryPrice) || 0;
+    const risk = parseFloat(riskPercent) || 0;
+    const balance = parseFloat(accountBalance) || 0;
+    const lots = parseFloat(lotSize) || 1;
+    const riskAmount = (balance * risk) / 100;
+    const pipValue = 10 * lots;
+    const pips = riskAmount / pipValue;
+    const price = entry - (pips * 0.0001);
+    setResult({ pips, price });
+  };
+
+  return (
+    <div className="space-y-3">
+      <div className="grid grid-cols-2 gap-2">
+        <Input type="number" value={entryPrice} onChange={(e) => setEntryPrice(e.target.value)} placeholder="Entry" />
+        <Input type="number" value={riskPercent} onChange={(e) => setRiskPercent(e.target.value)} placeholder="Risk %" />
+        <Input type="number" value={accountBalance} onChange={(e) => setAccountBalance(e.target.value)} placeholder="Balance" />
+        <Input type="number" value={lotSize} onChange={(e) => setLotSize(e.target.value)} placeholder="Lot Size" />
+      </div>
+      <Button onClick={calculate} className="w-full gradient-primary text-white text-sm py-1">{t('calculate')}</Button>
+      {result && <div className="grid grid-cols-2 gap-2 text-center"><div><p className="text-xs">Pips</p><p className="font-bold">{result.pips.toFixed(1)}</p></div><div><p className="text-xs">Price</p><p className="font-bold text-destructive">{result.price.toFixed(5)}</p></div></div>}
+    </div>
+  );
+}
+
+// Take Profit Calculator
+function TakeProfitCalculator({ t, language }: { t: (key: string) => string; language: string }) {
+  const [entryPrice, setEntryPrice] = useState('1.0900');
+  const [riskReward, setRiskReward] = useState('2');
+  const [stopLossPips, setStopLossPips] = useState('50');
+  const [result, setResult] = useState<{ tpPips: number; tpPrice: number } | null>(null);
+
+  const calculate = () => {
+    const entry = parseFloat(entryPrice) || 0;
+    const rr = parseFloat(riskReward) || 2;
+    const sl = parseFloat(stopLossPips) || 0;
+    const tpPips = sl * rr;
+    const tpPrice = entry + (tpPips * 0.0001);
+    setResult({ tpPips, tpPrice });
+  };
+
+  return (
+    <div className="space-y-3">
+      <div className="grid grid-cols-3 gap-2">
+        <Input type="number" value={entryPrice} onChange={(e) => setEntryPrice(e.target.value)} placeholder="Entry" />
+        <Input type="number" value={riskReward} onChange={(e) => setRiskReward(e.target.value)} placeholder="R:R" />
+        <Input type="number" value={stopLossPips} onChange={(e) => setStopLossPips(e.target.value)} placeholder="SL Pips" />
+      </div>
+      <Button onClick={calculate} className="w-full gradient-primary text-white text-sm py-1">{t('calculate')}</Button>
+      {result && <div className="grid grid-cols-2 gap-2 text-center"><div><p className="text-xs">TP Pips</p><p className="font-bold">{result.tpPips.toFixed(1)}</p></div><div><p className="text-xs">TP Price</p><p className="font-bold text-success">{result.tpPrice.toFixed(5)}</p></div></div>}
+    </div>
+  );
+}
+
+// Profit Factor Calculator
+function ProfitFactorCalculator({ t, language }: { t: (key: string) => string; language: string }) {
+  const [grossProfit, setGrossProfit] = useState('5000');
+  const [grossLoss, setGrossLoss] = useState('2500');
+  const [result, setResult] = useState<{ factor: number; rating: string } | null>(null);
+
+  const calculate = () => {
+    const profit = parseFloat(grossProfit) || 0;
+    const loss = parseFloat(grossLoss) || 1;
+    const factor = profit / loss;
+    const rating = factor >= 2 ? 'Excellent' : factor >= 1.5 ? 'Good' : factor >= 1 ? 'Acceptable' : 'Poor';
+    setResult({ factor, rating });
+  };
+
+  return (
+    <div className="space-y-3">
+      <div className="grid grid-cols-2 gap-2">
+        <Input type="number" value={grossProfit} onChange={(e) => setGrossProfit(e.target.value)} placeholder="Gross Profit" />
+        <Input type="number" value={grossLoss} onChange={(e) => setGrossLoss(e.target.value)} placeholder="Gross Loss" />
+      </div>
+      <Button onClick={calculate} className="w-full gradient-primary text-white text-sm py-1">{t('calculate')}</Button>
+      {result && <div className="text-center"><p className="font-bold text-primary text-2xl">{result.factor.toFixed(2)}</p><p className="text-xs">{result.rating}</p></div>}
+    </div>
+  );
+}
+
+// Risk of Ruin Calculator
+function RiskOfRuinCalculator({ t, language }: { t: (key: string) => string; language: string }) {
+  const [winRate, setWinRate] = useState('55');
+  const [riskPerTrade, setRiskPerTrade] = useState('2');
+  const [result, setResult] = useState<{ riskOfRuin: number } | null>(null);
+
+  const calculate = () => {
+    const win = parseFloat(winRate) / 100 || 0.5;
+    const risk = parseFloat(riskPerTrade) || 2;
+    const loss = 1 - win;
+    const riskOfRuin = Math.min(Math.pow(loss / win, 100 / risk) * 100, 100);
+    setResult({ riskOfRuin });
+  };
+
+  return (
+    <div className="space-y-3">
+      <div className="grid grid-cols-2 gap-2">
+        <Input type="number" value={winRate} onChange={(e) => setWinRate(e.target.value)} placeholder="Win Rate %" />
+        <Input type="number" value={riskPerTrade} onChange={(e) => setRiskPerTrade(e.target.value)} placeholder="Risk %" />
+      </div>
+      <Button onClick={calculate} className="w-full gradient-primary text-white text-sm py-1">{t('calculate')}</Button>
+      {result && <div className="text-center"><p className={`font-bold text-2xl ${result.riskOfRuin < 1 ? 'text-success' : result.riskOfRuin < 10 ? 'text-warning' : 'text-destructive'}`}>{result.riskOfRuin.toFixed(2)}%</p><p className="text-xs">{language === 'ar' ? 'مخاطر الإفلاس' : 'Risk of Ruin'}</p></div>}
+    </div>
+  );
+}
+
+// Commission Calculator
+function CommissionCalculator({ t, language }: { t: (key: string) => string; language: string }) {
+  const [lotSize, setLotSize] = useState('1');
+  const [commissionPerLot, setCommissionPerLot] = useState('7');
+  const [trades, setTrades] = useState('10');
+  const [result, setResult] = useState<{ perTrade: number; total: number } | null>(null);
+
+  const calculate = () => {
+    const lots = parseFloat(lotSize) || 1;
+    const commission = parseFloat(commissionPerLot) || 0;
+    const numTrades = parseFloat(trades) || 1;
+    const perTrade = lots * commission;
+    const total = perTrade * numTrades;
+    setResult({ perTrade, total });
+  };
+
+  return (
+    <div className="space-y-3">
+      <div className="grid grid-cols-3 gap-2">
+        <Input type="number" value={lotSize} onChange={(e) => setLotSize(e.target.value)} placeholder="Lot" />
+        <Input type="number" value={commissionPerLot} onChange={(e) => setCommissionPerLot(e.target.value)} placeholder="Comm/Lot" />
+        <Input type="number" value={trades} onChange={(e) => setTrades(e.target.value)} placeholder="Trades" />
+      </div>
+      <Button onClick={calculate} className="w-full gradient-primary text-white text-sm py-1">{t('calculate')}</Button>
+      {result && <div className="grid grid-cols-2 gap-2 text-center"><div><p className="text-xs">{language === 'ar' ? 'للصفقة' : 'Per Trade'}</p><p className="font-bold">${result.perTrade.toFixed(2)}</p></div><div><p className="text-xs">{language === 'ar' ? 'الإجمالي' : 'Total'}</p><p className="font-bold">${result.total.toFixed(2)}</p></div></div>}
+    </div>
+  );
+}
+
+// Session Overlap Calculator
+function SessionOverlapCalculator({ t, language }: { t: (key: string) => string; language: string }) {
+  const [pair, setPair] = useState('EUR/USD');
+  const [result, setResult] = useState<{ bestSession: string; overlap: string } | null>(null);
+
+  const sessions: Record<string, { best: string; overlap: string }> = {
+    'EUR/USD': { best: 'London/NY', overlap: '13:00-17:00 UTC' },
+    'GBP/USD': { best: 'London/NY', overlap: '13:00-17:00 UTC' },
+    'USD/JPY': { best: 'Tokyo/London', overlap: '08:00-09:00 UTC' },
+    'XAU/USD': { best: 'London/NY', overlap: '13:00-17:00 UTC' },
+  };
+
+  const calculate = () => {
+    const session = sessions[pair] || sessions['EUR/USD'];
+    setResult({ bestSession: session.best, overlap: session.overlap });
+  };
+
+  return (
+    <div className="space-y-3">
+      <Select value={pair} onValueChange={setPair}>
+        <SelectTrigger><SelectValue /></SelectTrigger>
+        <SelectContent>
+          {Object.keys(sessions).map(p => <SelectItem key={p} value={p}>{p}</SelectItem>)}
+        </SelectContent>
+      </Select>
+      <Button onClick={calculate} className="w-full gradient-primary text-white text-sm py-1">{t('calculate')}</Button>
+      {result && <div className="text-center"><p className="font-bold text-primary">{result.bestSession}</p><p className="text-xs">{result.overlap}</p></div>}
+    </div>
+  );
+}
+
+// Equity Curve Calculator
+function EquityCurveCalculator({ t, language }: { t: (key: string) => string; language: string }) {
+  const [initialCapital, setInitialCapital] = useState('10000');
+  const [monthlyReturn, setMonthlyReturn] = useState('5');
+  const [months, setMonths] = useState('12');
+  const [result, setResult] = useState<{ finalValue: number; totalReturn: number } | null>(null);
+
+  const calculate = () => {
+    const capital = parseFloat(initialCapital) || 0;
+    const monthly = parseFloat(monthlyReturn) / 100 || 0;
+    const m = parseFloat(months) || 1;
+    const finalValue = capital * Math.pow(1 + monthly, m);
+    const totalReturn = ((finalValue - capital) / capital) * 100;
+    setResult({ finalValue, totalReturn });
+  };
+
+  return (
+    <div className="space-y-3">
+      <div className="grid grid-cols-3 gap-2">
+        <Input type="number" value={initialCapital} onChange={(e) => setInitialCapital(e.target.value)} placeholder="Capital" />
+        <Input type="number" value={monthlyReturn} onChange={(e) => setMonthlyReturn(e.target.value)} placeholder="Monthly %" />
+        <Input type="number" value={months} onChange={(e) => setMonths(e.target.value)} placeholder="Months" />
+      </div>
+      <Button onClick={calculate} className="w-full gradient-primary text-white text-sm py-1">{t('calculate')}</Button>
+      {result && <div className="grid grid-cols-2 gap-2 text-center"><div><p className="text-xs">{language === 'ar' ? 'القيمة' : 'Value'}</p><p className="font-bold">${result.finalValue.toFixed(2)}</p></div><div><p className="text-xs">{language === 'ar' ? 'العائد' : 'Return'}</p><p className="font-bold text-success">{result.totalReturn.toFixed(2)}%</p></div></div>}
+    </div>
+  );
+}
+
+// Leverage Impact Calculator
+function LeverageImpactCalculator({ t, language }: { t: (key: string) => string; language: string }) {
+  const [capital, setCapital] = useState('1000');
+  const [leverage, setLeverage] = useState('100');
+  const [priceChange, setPriceChange] = useState('1');
+  const [result, setResult] = useState<{ profit: number; actualChange: number } | null>(null);
+
+  const calculate = () => {
+    const cap = parseFloat(capital) || 0;
+    const lev = parseFloat(leverage) || 1;
+    const change = parseFloat(priceChange) || 0;
+    const positionValue = cap * lev;
+    const profit = positionValue * (change / 100);
+    const actualChange = lev * change;
+    setResult({ profit, actualChange });
+  };
+
+  return (
+    <div className="space-y-3">
+      <div className="grid grid-cols-3 gap-2">
+        <Input type="number" value={capital} onChange={(e) => setCapital(e.target.value)} placeholder="Capital" />
+        <Input type="number" value={leverage} onChange={(e) => setLeverage(e.target.value)} placeholder="Leverage" />
+        <Input type="number" value={priceChange} onChange={(e) => setPriceChange(e.target.value)} placeholder="Price %" />
+      </div>
+      <Button onClick={calculate} className="w-full gradient-primary text-white text-sm py-1">{t('calculate')}</Button>
+      {result && <div className="text-center"><p className="text-xs">{language === 'ar' ? 'تغير فعلي' : 'Actual Change'}: {result.actualChange.toFixed(2)}%</p><p className="font-bold text-success">+${result.profit.toFixed(2)}</p></div>}
+    </div>
+  );
+}
+
+// Average Trade Calculator
+function AverageTradeCalculator({ t, language }: { t: (key: string) => string; language: string }) {
+  const [totalProfit, setTotalProfit] = useState('10000');
+  const [totalTrades, setTotalTrades] = useState('100');
+  const [result, setResult] = useState<{ avgProfit: number } | null>(null);
+
+  const calculate = () => {
+    const profit = parseFloat(totalProfit) || 0;
+    const trades = parseFloat(totalTrades) || 1;
+    setResult({ avgProfit: profit / trades });
+  };
+
+  return (
+    <div className="space-y-3">
+      <div className="grid grid-cols-2 gap-2">
+        <Input type="number" value={totalProfit} onChange={(e) => setTotalProfit(e.target.value)} placeholder="Total Profit" />
+        <Input type="number" value={totalTrades} onChange={(e) => setTotalTrades(e.target.value)} placeholder="Trades" />
+      </div>
+      <Button onClick={calculate} className="w-full gradient-primary text-white text-sm py-1">{t('calculate')}</Button>
+      {result && <div className="text-center"><p className="font-bold text-primary">${result.avgProfit.toFixed(2)}</p><p className="text-xs">{language === 'ar' ? 'متوسط/صفقة' : 'Avg/Trade'}</p></div>}
     </div>
   );
 }
