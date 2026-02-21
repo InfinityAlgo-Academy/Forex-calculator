@@ -50,7 +50,8 @@ function CalculatorCard({
   icon, 
   component,
   usageCount,
-  popularityRank
+  popularityRank,
+  language
 }: { 
   title: string; 
   description: string; 
@@ -58,50 +59,48 @@ function CalculatorCard({
   component: React.ReactNode;
   usageCount?: number;
   popularityRank?: number;
+  language: string;
 }) {
   const [isExpanded, setIsExpanded] = useState(false);
   
   // Determine badge type based on popularity
   const getPopularityBadge = () => {
-    if (!usageCount || usageCount === 0) return null;
+    // Show badge if we have a rank (top 5 calculators)
+    if (!popularityRank) return null;
     
     if (popularityRank === 1) {
       return (
-        <Badge className="bg-gradient-to-r from-yellow-400 to-amber-500 text-yellow-900 text-[10px] px-2 py-0.5 gap-1">
+        <Badge className="bg-gradient-to-r from-yellow-400 to-amber-500 text-yellow-900 text-[10px] px-2 py-0.5 gap-1 shadow-md">
           <Flame className="w-3 h-3" />
-          #1 {title.includes('حاسبة') || title.includes('Size') || title.includes('Value') ? '' : 'Hot'}
+          #1 {language === 'ar' ? 'الأكثر استخداماً' : 'Most Popular'}
         </Badge>
       );
     }
     if (popularityRank === 2) {
       return (
-        <Badge className="bg-gradient-to-r from-gray-300 to-gray-400 text-gray-800 text-[10px] px-2 py-0.5 gap-1">
-          <TrendingUp className="w-3 h-3" />
+        <Badge className="bg-gradient-to-r from-gray-300 to-gray-400 text-gray-800 text-[10px] px-2 py-0.5 gap-1 shadow-md">
+          <Star className="w-3 h-3" />
           #2
         </Badge>
       );
     }
     if (popularityRank === 3) {
       return (
-        <Badge className="bg-gradient-to-r from-amber-600 to-amber-700 text-white text-[10px] px-2 py-0.5 gap-1">
-          <TrendingUp className="w-3 h-3" />
+        <Badge className="bg-gradient-to-r from-amber-600 to-amber-700 text-white text-[10px] px-2 py-0.5 gap-1 shadow-md">
+          <Star className="w-3 h-3" />
           #3
         </Badge>
       );
     }
     if (popularityRank && popularityRank <= 5) {
       return (
-        <Badge variant="secondary" className="text-[10px] px-2 py-0.5 gap-1">
+        <Badge variant="secondary" className="text-[10px] px-2 py-0.5 gap-1 shadow-sm">
           <Activity className="w-3 h-3" />
           Top {popularityRank}
         </Badge>
       );
     }
-    return (
-      <Badge variant="outline" className="text-[10px] px-2 py-0.5">
-        {usageCount} {usageCount === 1 ? 'use' : 'uses'}
-      </Badge>
-    );
+    return null;
   };
   
   return (
@@ -118,7 +117,7 @@ function CalculatorCard({
         ${popularityRank && popularityRank <= 3 ? 'ring-1 ring-primary/30' : ''}
       `}>
         {/* Popularity Badge - Top Right */}
-        {usageCount && usageCount > 0 && (
+        {popularityRank && (
           <div className="absolute top-2 right-2 z-10">
             {getPopularityBadge()}
           </div>
@@ -196,6 +195,281 @@ function CalculatorCard({
   );
 }
 
+// Popular Calculators Statistics Section
+function PopularCalculatorsStats({ 
+  language, 
+  stats
+}: { 
+  language: string; 
+  stats: {
+    totalCalculations: number;
+    visitors: number;
+    popularCalculators: { name: string; count: number }[];
+  };
+}) {
+  // Get top 5 calculators with their usage data
+  const topCalculators = stats.popularCalculators
+    .filter(c => c.count > 0)
+    .slice(0, 5);
+  
+  const totalUsage = stats.totalCalculations || 1;
+  
+  // Calculator icon mapping
+  const getCalculatorIcon = (name: string) => {
+    const icons: Record<string, React.ReactNode> = {
+      'Position Size': <Calculator className="w-4 h-4" />,
+      'Pip Value': <Activity className="w-4 h-4" />,
+      'Risk/Reward': <Target className="w-4 h-4" />,
+      'Fibonacci': <LineChart className="w-4 h-4" />,
+      'Profit/Loss': <TrendingUp className="w-4 h-4" />,
+      'Margin': <DollarSign className="w-4 h-4" />,
+      'Spread': <ArrowUpDown className="w-4 h-4" />,
+      'Pips Converter': <Hash className="w-4 h-4" />,
+    };
+    return icons[name] || <Calculator className="w-4 h-4" />;
+  };
+  
+  // Arabic names mapping
+  const getArabicName = (name: string) => {
+    const names: Record<string, string> = {
+      'Position Size': 'حجم الصفقة',
+      'Pip Value': 'قيمة النقطة',
+      'Risk/Reward': 'المخاطرة/المكافأة',
+      'Fibonacci': 'فيبوناتشي',
+      'Profit/Loss': 'الربح والخسارة',
+      'Margin': 'الهامش',
+      'Spread': 'السبريد',
+      'Pips Converter': 'تحويل النقاط',
+    };
+    return names[name] || name;
+  };
+
+  // Featured calculators when no usage data
+  const featuredCalculators = [
+    { name: 'Position Size', desc: language === 'ar' ? 'حساب حجم الصفقة' : 'Calculate position size' },
+    { name: 'Pip Value', desc: language === 'ar' ? 'قيمة النقطة بالدولار' : 'Pip value in USD' },
+    { name: 'Risk/Reward', desc: language === 'ar' ? 'نسبة المخاطرة للمكافأة' : 'Risk to reward ratio' },
+    { name: 'Fibonacci', desc: language === 'ar' ? 'مستويات فيبوناتشي' : 'Fibonacci levels' },
+    { name: 'Profit/Loss', desc: language === 'ar' ? 'حساب الربح والخسارة' : 'Calculate profit/loss' },
+  ];
+
+  // Show placeholder if no data
+  if (topCalculators.length === 0) {
+    return (
+      <section className="py-8 px-4 sm:px-6 lg:px-8 bg-gradient-to-r from-primary/5 via-primary/10 to-primary/5 border-b">
+        <div className="max-w-7xl mx-auto">
+          {/* Section Header */}
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-6">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-lg">
+                <Star className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <h2 className="text-xl font-bold">
+                  {language === 'ar' ? '⭐ الحاسبات المميزة' : '⭐ Featured Calculators'}
+                </h2>
+                <p className="text-xs text-muted-foreground">
+                  {language === 'ar' 
+                    ? 'أفضل الحاسبات للمتداولين المحترفين'
+                    : 'Top calculators for professional traders'}
+                </p>
+              </div>
+            </div>
+            
+            {/* Stats Summary */}
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-card border shadow-sm">
+                <Award className="w-4 h-4 text-primary" />
+                <span className="text-sm font-medium">{stats.visitors.toLocaleString()}</span>
+                <span className="text-xs text-muted-foreground">
+                  {language === 'ar' ? 'زائر' : 'visitors'}
+                </span>
+              </div>
+            </div>
+          </div>
+          
+          {/* Featured Calculators Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+            {featuredCalculators.map((calc, index) => {
+              const rankColors = [
+                'from-yellow-400 to-amber-500',
+                'from-gray-300 to-gray-400',
+                'from-amber-600 to-amber-700',
+                'from-blue-400 to-blue-500',
+                'from-green-400 to-green-500',
+              ];
+              
+              return (
+                <motion.div
+                  key={calc.name}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                  className="relative group"
+                >
+                  <Card className="overflow-hidden hover:shadow-lg transition-all duration-300 cursor-pointer" onClick={() => {
+                    const calculatorsSection = document.getElementById('calculators');
+                    calculatorsSection?.scrollIntoView({ behavior: 'smooth' });
+                  }}>
+                    {/* Rank Badge */}
+                    <div className={`
+                      absolute top-0 left-0 w-8 h-8 flex items-center justify-center
+                      bg-gradient-to-r ${rankColors[index]} text-white text-sm font-bold
+                      ${index === 0 ? 'rounded-br-xl' : 'rounded-br-lg'}
+                    `}>
+                      {index + 1}
+                    </div>
+                    
+                    <CardContent className="pt-10 pb-4 px-4">
+                      <div className="flex items-center gap-2 mb-3">
+                        <div className={`
+                          w-8 h-8 rounded-lg flex items-center justify-center
+                          ${index === 0 ? 'bg-gradient-to-r from-yellow-400 to-amber-500 text-white' : 'bg-muted text-primary'}
+                        `}>
+                          {getCalculatorIcon(calc.name)}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-semibold text-sm truncate">
+                            {language === 'ar' ? getArabicName(calc.name) : calc.name}
+                          </h3>
+                        </div>
+                      </div>
+                      
+                      <p className="text-xs text-muted-foreground">
+                        {calc.desc}
+                      </p>
+                      
+                      <div className="mt-3 flex items-center gap-1 text-primary text-xs">
+                        <Sparkles className="w-3 h-3" />
+                        <span>{language === 'ar' ? 'جرب الآن' : 'Try now'}</span>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  return (
+    <section className="py-8 px-4 sm:px-6 lg:px-8 bg-gradient-to-r from-primary/5 via-primary/10 to-primary/5 border-b">
+      <div className="max-w-7xl mx-auto">
+        {/* Section Header */}
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-6">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-lg">
+              <Flame className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <h2 className="text-xl font-bold">
+                {language === 'ar' ? '🔥 الحاسبات الأكثر استخداماً' : '🔥 Most Popular Calculators'}
+              </h2>
+              <p className="text-xs text-muted-foreground">
+                {language === 'ar' 
+                  ? `${stats.totalCalculations.toLocaleString()} عملية حسابية`
+                  : `${stats.totalCalculations.toLocaleString()} calculations`}
+              </p>
+            </div>
+          </div>
+          
+          {/* Stats Summary */}
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-card border shadow-sm">
+              <Activity className="w-4 h-4 text-primary" />
+              <span className="text-sm font-medium">{stats.totalCalculations.toLocaleString()}</span>
+              <span className="text-xs text-muted-foreground">
+                {language === 'ar' ? 'عملية' : 'calcs'}
+              </span>
+            </div>
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-card border shadow-sm">
+              <Award className="w-4 h-4 text-primary" />
+              <span className="text-sm font-medium">{stats.visitors.toLocaleString()}</span>
+              <span className="text-xs text-muted-foreground">
+                {language === 'ar' ? 'زائر' : 'visitors'}
+              </span>
+            </div>
+          </div>
+        </div>
+        
+        {/* Top Calculators Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+          {topCalculators.map((calc, index) => {
+            const percentage = Math.round((calc.count / totalUsage) * 100);
+            const rankColors = [
+              'from-yellow-400 to-amber-500',
+              'from-gray-300 to-gray-400',
+              'from-amber-600 to-amber-700',
+              'from-blue-400 to-blue-500',
+              'from-green-400 to-green-500',
+            ];
+            
+            return (
+              <motion.div
+                key={calc.name}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.1 }}
+                className="relative group"
+              >
+                <Card className="overflow-hidden hover:shadow-lg transition-all duration-300">
+                  {/* Rank Badge */}
+                  <div className={`
+                    absolute top-0 left-0 w-8 h-8 flex items-center justify-center
+                    bg-gradient-to-r ${rankColors[index]} text-white text-sm font-bold
+                    ${index === 0 ? 'rounded-br-xl' : 'rounded-br-lg'}
+                  `}>
+                    {index + 1}
+                  </div>
+                  
+                  <CardContent className="pt-10 pb-4 px-4">
+                    <div className="flex items-center gap-2 mb-3">
+                      <div className={`
+                        w-8 h-8 rounded-lg flex items-center justify-center
+                        ${index === 0 ? 'bg-gradient-to-r from-yellow-400 to-amber-500 text-white' : 'bg-muted text-primary'}
+                      `}>
+                        {getCalculatorIcon(calc.name)}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-semibold text-sm truncate">
+                          {language === 'ar' ? getArabicName(calc.name) : calc.name}
+                        </h3>
+                      </div>
+                    </div>
+                    
+                    {/* Usage Count */}
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-2xl font-bold text-primary">{calc.count}</span>
+                      <span className="text-xs text-muted-foreground">
+                        {language === 'ar' ? 'استخدام' : 'uses'}
+                      </span>
+                    </div>
+                    
+                    {/* Progress Bar */}
+                    <div className="h-2 bg-muted rounded-full overflow-hidden">
+                      <motion.div
+                        initial={{ width: 0 }}
+                        animate={{ width: `${percentage}%` }}
+                        transition={{ delay: index * 0.1 + 0.2, duration: 0.5 }}
+                        className={`h-full bg-gradient-to-r ${rankColors[index]} rounded-full`}
+                      />
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1 text-right">
+                      {percentage}%
+                    </p>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            );
+          })}
+        </div>
+      </div>
+    </section>
+  );
+}
+
 export default function ForexCalculatorApp() {
   const { language, setLanguage, t, isRTL } = useLanguage();
   const { 
@@ -222,18 +496,37 @@ export default function ForexCalculatorApp() {
   }, []);
 
   // Helper function to get popularity info for a calculator
-  const getPopularityInfo = (calculatorName: string): { usageCount: number; rank: number | undefined } => {
+  const getPopularityInfo = (calculatorName: string): { usageCount: number; popularityRank: number | undefined } => {
+    // Default popular calculators ranking (always show for top calculators)
+    const defaultRanking: Record<string, number> = {
+      'Position Size': 1,
+      'Pip Value': 2,
+      'Risk/Reward': 3,
+      'Margin': 4,
+      'Profit/Loss': 5,
+      'Fibonacci': 6,
+      'Spread': 7,
+      'Pips Converter': 8,
+    };
+    
     const popularCalcs = stats.popularCalculators;
     const index = popularCalcs.findIndex(c => c.name === calculatorName);
     
-    if (index === -1 || popularCalcs[index].count === 0) {
-      return { usageCount: 0, rank: undefined };
+    // If we have actual usage data
+    if (index !== -1 && popularCalcs[index].count > 0) {
+      return { 
+        usageCount: popularCalcs[index].count, 
+        popularityRank: index + 1 
+      };
     }
     
-    return { 
-      usageCount: popularCalcs[index].count, 
-      rank: index + 1 
-    };
+    // Otherwise, use default ranking (only show for top 5)
+    const defaultRank = defaultRanking[calculatorName];
+    if (defaultRank && defaultRank <= 5) {
+      return { usageCount: 0, popularityRank: defaultRank };
+    }
+    
+    return { usageCount: 0, popularityRank: undefined };
   };
 
   // Fetch real forex prices
@@ -305,6 +598,12 @@ export default function ForexCalculatorApp() {
           setActiveSection={setActiveSection} 
           stats={stats}
           totalCalculators={50}
+        />
+
+        {/* Popular Calculators Statistics Section */}
+        <PopularCalculatorsStats 
+          language={language} 
+          stats={stats} 
         />
 
         {/* Global Pair Selector */}
@@ -384,6 +683,7 @@ export default function ForexCalculatorApp() {
                     title={language === 'ar' ? 'حجم الصفقة' : 'Position Size'}
                     description={language === 'ar' ? 'احسب الحجم الأمثل لصفقتك' : 'Calculate optimal position size'}
                     icon={<Calculator className="w-5 h-5" />}
+                    language={language}
                     component={<PositionSizeCalculator t={t} language={language} />}
                     {...getPopularityInfo('Position Size')}
                   />
@@ -391,6 +691,7 @@ export default function ForexCalculatorApp() {
                     title={language === 'ar' ? 'المخاطرة/المكافأة' : 'Risk/Reward'}
                     description={language === 'ar' ? 'نسبة المخاطرة للمكافأة' : 'Risk to reward ratio'}
                     icon={<Target className="w-5 h-5" />}
+                    language={language}
                     component={<RiskRewardCalculator t={t} language={language} />}
                     {...getPopularityInfo('Risk/Reward')}
                   />
@@ -398,24 +699,28 @@ export default function ForexCalculatorApp() {
                     title={language === 'ar' ? 'المخاطرة بالنسبة المئوية' : 'Risk Percentage'}
                     description={language === 'ar' ? 'احسب نسبة المخاطرة' : 'Calculate risk percentage'}
                     icon={<Percent className="w-5 h-5" />}
+                    language={language}
                     component={<RiskPercentageCalculator t={t} language={language} />}
                   />
                   <CalculatorCard 
                     title={language === 'ar' ? 'الحد الأقصى للخسارة' : 'Max Drawdown'}
                     description={language === 'ar' ? 'احسب أقصى خسارة مسموحة' : 'Calculate maximum drawdown'}
                     icon={<TrendingDown className="w-5 h-5" />}
+                    language={language}
                     component={<DrawdownCalculator t={t} language={language} />}
                   />
                   <CalculatorCard 
                     title={language === 'ar' ? 'نقطة التعادل' : 'Break Even'}
                     description={language === 'ar' ? 'احسب نقطة التعادل' : 'Calculate break even point'}
                     icon={<ArrowUpDown className="w-5 h-5" />}
+                    language={language}
                     component={<BreakEvenCalculator t={t} language={language} />}
                   />
                   <CalculatorCard 
                     title={language === 'ar' ? 'مستوى الهامش' : 'Margin Level'}
                     description={language === 'ar' ? 'احسب مستوى الهامش' : 'Calculate margin level'}
                     icon={<Scale className="w-5 h-5" />}
+                    language={language}
                     component={<MarginLevelCalculator t={t} language={language} />}
                   />
                 </div>
@@ -428,6 +733,7 @@ export default function ForexCalculatorApp() {
                     title={language === 'ar' ? 'قيمة النقطة' : 'Pip Value'}
                     description={language === 'ar' ? 'احسب قيمة النقطة' : 'Calculate pip value'}
                     icon={<Activity className="w-5 h-5" />}
+                    language={language}
                     component={<PipValueCalculator t={t} language={language} />}
                     {...getPopularityInfo('Pip Value')}
                   />
@@ -435,6 +741,7 @@ export default function ForexCalculatorApp() {
                     title={language === 'ar' ? 'الهامش المطلوب' : 'Margin Required'}
                     description={language === 'ar' ? 'احسب الهامش المطلوب' : 'Calculate required margin'}
                     icon={<DollarSign className="w-5 h-5" />}
+                    language={language}
                     component={<MarginCalculator t={t} language={language} exchangeRates={exchangeRates} />}
                     {...getPopularityInfo('Margin')}
                   />
@@ -442,6 +749,7 @@ export default function ForexCalculatorApp() {
                     title={language === 'ar' ? 'الربح والخسارة' : 'Profit/Loss'}
                     description={language === 'ar' ? 'احسب الربح أو الخسارة' : 'Calculate profit or loss'}
                     icon={<TrendingUp className="w-5 h-5" />}
+                    language={language}
                     component={<ProfitLossCalculator t={t} language={language} />}
                     {...getPopularityInfo('Profit/Loss')}
                   />
@@ -449,18 +757,21 @@ export default function ForexCalculatorApp() {
                     title={language === 'ar' ? 'السواب' : 'Swap'}
                     description={language === 'ar' ? 'احسب رسوم السواب' : 'Calculate swap fees'}
                     icon={<RefreshCw className="w-5 h-5" />}
+                    language={language}
                     component={<SwapCalculator t={t} language={language} />}
                   />
                   <CalculatorCard 
                     title={language === 'ar' ? 'الرافعة المالية' : 'Leverage'}
                     description={language === 'ar' ? 'احسب الرافعة المالية' : 'Calculate leverage'}
                     icon={<Layers className="w-5 h-5" />}
+                    language={language}
                     component={<LeverageCalculator t={t} language={language} />}
                   />
                   <CalculatorCard 
                     title={language === 'ar' ? 'حجم اللوت' : 'Lot Size'}
                     description={language === 'ar' ? 'احسب حجم اللوت' : 'Calculate lot size'}
                     icon={<Hash className="w-5 h-5" />}
+                    language={language}
                     component={<LotSizeCalculator t={t} language={language} />}
                   />
                 </div>
@@ -473,6 +784,7 @@ export default function ForexCalculatorApp() {
                     title={language === 'ar' ? 'مستويات فيبوناتشي' : 'Fibonacci Levels'}
                     description={language === 'ar' ? 'احسب مستويات فيبوناتشي' : 'Calculate Fibonacci levels'}
                     icon={<LineChart className="w-5 h-5" />}
+                    language={language}
                     component={<FibonacciCalculator t={t} language={language} />}
                     {...getPopularityInfo('Fibonacci')}
                   />
@@ -480,60 +792,70 @@ export default function ForexCalculatorApp() {
                     title={language === 'ar' ? 'نقاط البيفوت' : 'Pivot Points'}
                     description={language === 'ar' ? 'احسب نقاط البيفوت' : 'Calculate pivot points'}
                     icon={<BarChart3 className="w-5 h-5" />}
+                    language={language}
                     component={<PivotPointsCalculator t={t} language={language} />}
                   />
                   <CalculatorCard 
                     title={language === 'ar' ? 'المتوسط المتحرك' : 'Moving Average'}
                     description={language === 'ar' ? 'احسب المتوسط المتحرك' : 'Calculate moving average'}
                     icon={<TrendingUpIcon className="w-5 h-5" />}
+                    language={language}
                     component={<MovingAverageCalculator t={t} language={language} />}
                   />
                   <CalculatorCard 
                     title="ATR"
                     description={language === 'ar' ? 'متوسط المدى الحقيقي' : 'Average True Range'}
                     icon={<Activity className="w-5 h-5" />}
+                    language={language}
                     component={<ATRCalculator t={t} language={language} />}
                   />
                   <CalculatorCard 
                     title="RSI"
                     description={language === 'ar' ? 'مؤشر القوة النسبية' : 'Relative Strength Index'}
                     icon={<Activity className="w-5 h-5" />}
+                    language={language}
                     component={<RSICalculator t={t} language={language} />}
                   />
                   <CalculatorCard 
                     title="MACD"
                     description={language === 'ar' ? 'مؤشر التقارب والتباعد' : 'Moving Average Convergence Divergence'}
                     icon={<BarChart3 className="w-5 h-5" />}
+                    language={language}
                     component={<MACDCalculator t={t} language={language} />}
                   />
                   <CalculatorCard 
                     title="Bollinger Bands"
                     description={language === 'ar' ? 'نطاقات بولينجر' : 'Bollinger Bands'}
                     icon={<TrendingUp className="w-5 h-5" />}
+                    language={language}
                     component={<BollingerBandsCalculator t={t} language={language} />}
                   />
                   <CalculatorCard 
                     title="Stochastic"
                     description={language === 'ar' ? 'مذبذب ستوكاستيك' : 'Stochastic Oscillator'}
                     icon={<Activity className="w-5 h-5" />}
+                    language={language}
                     component={<StochasticCalculator t={t} language={language} />}
                   />
                   <CalculatorCard 
                     title={language === 'ar' ? 'معامل الارتباط' : 'Correlation'}
                     description={language === 'ar' ? 'احسب معامل الارتباط' : 'Calculate correlation'}
                     icon={<Repeat className="w-5 h-5" />}
+                    language={language}
                     component={<CorrelationCalculator t={t} language={language} />}
                   />
                   <CalculatorCard 
                     title={language === 'ar' ? 'الانحراف المعياري' : 'Standard Deviation'}
                     description={language === 'ar' ? 'احسب الانحراف المعياري' : 'Calculate standard deviation'}
                     icon={<Activity className="w-5 h-5" />}
+                    language={language}
                     component={<StandardDeviationCalculator t={t} language={language} />}
                   />
                   <CalculatorCard 
                     title={language === 'ar' ? 'الزخم' : 'Momentum'}
                     description={language === 'ar' ? 'احسب الزخم' : 'Calculate momentum'}
                     icon={<Zap className="w-5 h-5" />}
+                    language={language}
                     component={<MomentumCalculator t={t} language={language} />}
                   />
                 </div>
@@ -546,54 +868,63 @@ export default function ForexCalculatorApp() {
                     title={language === 'ar' ? 'الفائدة المركبة' : 'Compound Interest'}
                     description={language === 'ar' ? 'احسب الفائدة المركبة' : 'Calculate compound interest'}
                     icon={<PieChart className="w-5 h-5" />}
+                    language={language}
                     component={<CompoundInterestCalculator t={t} language={language} />}
                   />
                   <CalculatorCard 
                     title={language === 'ar' ? 'معامل كيلي' : 'Kelly Criterion'}
                     description={language === 'ar' ? 'احسب معامل كيلي' : 'Calculate Kelly criterion'}
                     icon={<Percent className="w-5 h-5" />}
+                    language={language}
                     component={<KellyCriterionCalculator t={t} language={language} />}
                   />
                   <CalculatorCard 
                     title={language === 'ar' ? 'نسبة شارب' : 'Sharpe Ratio'}
                     description={language === 'ar' ? 'احسب نسبة شارب' : 'Calculate Sharpe ratio'}
                     icon={<BarChart3 className="w-5 h-5" />}
+                    language={language}
                     component={<SharpeRatioCalculator t={t} language={language} />}
                   />
                   <CalculatorCard 
                     title={language === 'ar' ? 'القيمة المتوقعة' : 'Expected Value'}
                     description={language === 'ar' ? 'احسب القيمة المتوقعة' : 'Calculate expected value'}
                     icon={<Calculator className="w-5 h-5" />}
+                    language={language}
                     component={<ExpectedValueCalculator t={t} language={language} />}
                   />
                   <CalculatorCard 
                     title={language === 'ar' ? 'العائد على الاستثمار' : 'ROI'}
                     description={language === 'ar' ? 'احسب العائد على الاستثمار' : 'Calculate return on investment'}
                     icon={<TrendingUp className="w-5 h-5" />}
+                    language={language}
                     component={<ROICalculator t={t} language={language} />}
                   />
                   <CalculatorCard 
                     title={language === 'ar' ? 'حجم الحساب المطلوب' : 'Account Size'}
                     description={language === 'ar' ? 'احسب حجم الحساب المطلوب' : 'Calculate required account size'}
                     icon={<Wallet className="w-5 h-5" />}
+                    language={language}
                     component={<AccountSizeCalculator t={t} language={language} />}
                   />
                   <CalculatorCard 
                     title="Profit Factor"
                     description={language === 'ar' ? 'معامل الربحية' : 'Profit Factor Calculator'}
                     icon={<TrendingUp className="w-5 h-5" />}
+                    language={language}
                     component={<ProfitFactorCalculator t={t} language={language} />}
                   />
                   <CalculatorCard 
                     title={language === 'ar' ? 'منحنى الأسهم' : 'Equity Curve'}
                     description={language === 'ar' ? 'توقع نمو الحساب' : 'Project account growth'}
                     icon={<LineChart className="w-5 h-5" />}
+                    language={language}
                     component={<EquityCurveCalculator t={t} language={language} />}
                   />
                   <CalculatorCard 
                     title={language === 'ar' ? 'متوسط الصفقة' : 'Avg Trade'}
                     description={language === 'ar' ? 'متوسط الربح للصفقة' : 'Average profit per trade'}
                     icon={<Calculator className="w-5 h-5" />}
+                    language={language}
                     component={<AverageTradeCalculator t={t} language={language} />}
                   />
                 </div>
@@ -631,6 +962,7 @@ export default function ForexCalculatorApp() {
                     title={language === 'ar' ? 'تداخل الجلسات' : 'Session Overlap'}
                     description={language === 'ar' ? 'أفضل وقت للتداول' : 'Best trading times'}
                     icon={<Clock className="w-5 h-5" />}
+                    language={language}
                     component={<SessionOverlapCalculator t={t} language={language} />}
                   />
                 </div>
@@ -643,6 +975,7 @@ export default function ForexCalculatorApp() {
                     title={language === 'ar' ? 'السبريد' : 'Spread'}
                     description={language === 'ar' ? 'احسب السبريد' : 'Calculate spread'}
                     icon={<ArrowUpDown className="w-5 h-5" />}
+                    language={language}
                     component={<SpreadCalculator t={t} language={language} />}
                     {...getPopularityInfo('Spread')}
                   />
@@ -650,66 +983,77 @@ export default function ForexCalculatorApp() {
                     title={language === 'ar' ? 'تكلفة الصفقة' : 'Trade Cost'}
                     description={language === 'ar' ? 'احسب تكلفة الصفقة' : 'Calculate trade cost'}
                     icon={<Coins className="w-5 h-5" />}
+                    language={language}
                     component={<TradeCostCalculator t={t} language={language} />}
                   />
                   <CalculatorCard 
                     title={language === 'ar' ? 'حجم الصفقات المتعددة' : 'Multi-Position'}
                     description={language === 'ar' ? 'احسب حجم صفقات متعددة' : 'Calculate multiple positions'}
                     icon={<Layers className="w-5 h-5" />}
+                    language={language}
                     component={<MultiPositionCalculator t={t} language={language} />}
                   />
                   <CalculatorCard 
                     title={language === 'ar' ? 'معدل الربح' : 'Win Rate'}
                     description={language === 'ar' ? 'احسب معدل الربح' : 'Calculate win rate'}
                     icon={<CheckCircle2 className="w-5 h-5" />}
+                    language={language}
                     component={<WinRateCalculator t={t} language={language} />}
                   />
                   <CalculatorCard 
                     title={language === 'ar' ? 'التقلب' : 'Volatility'}
                     description={language === 'ar' ? 'احسب التقلب' : 'Calculate volatility'}
                     icon={<Activity className="w-5 h-5" />}
+                    language={language}
                     component={<VolatilityCalculator t={t} language={language} />}
                   />
                   <CalculatorCard 
                     title={language === 'ar' ? 'القيمة المعرضة للخطر' : 'Value at Risk'}
                     description={language === 'ar' ? 'احسب VaR' : 'Calculate VaR'}
                     icon={<AlertTriangle className="w-5 h-5" />}
+                    language={language}
                     component={<VaRCalculator t={t} language={language} />}
                   />
                   <CalculatorCard 
                     title={language === 'ar' ? 'حرارة المراكز' : 'Position Heat'}
                     description={language === 'ar' ? 'مخاطر المراكز المفتوحة' : 'Open positions risk'}
                     icon={<Zap className="w-5 h-5" />}
+                    language={language}
                     component={<PositionHeatCalculator t={t} language={language} />}
                   />
                   <CalculatorCard 
                     title={language === 'ar' ? 'مسافة وقف الخسارة' : 'SL Distance'}
                     description={language === 'ar' ? 'احسب مسافة الوقف' : 'Calculate stop loss distance'}
                     icon={<Target className="w-5 h-5" />}
+                    language={language}
                     component={<StopLossDistanceCalculator t={t} language={language} />}
                   />
                   <CalculatorCard 
                     title={language === 'ar' ? 'جني الأرباح' : 'Take Profit'}
                     description={language === 'ar' ? 'احسب مستوى الهدف' : 'Calculate take profit level'}
                     icon={<TrendingUp className="w-5 h-5" />}
+                    language={language}
                     component={<TakeProfitCalculator t={t} language={language} />}
                   />
                   <CalculatorCard 
                     title={language === 'ar' ? 'مخاطر الإفلاس' : 'Risk of Ruin'}
                     description={language === 'ar' ? 'احسب مخاطر الإفلاس' : 'Calculate risk of ruin'}
                     icon={<AlertTriangle className="w-5 h-5" />}
+                    language={language}
                     component={<RiskOfRuinCalculator t={t} language={language} />}
                   />
                   <CalculatorCard 
                     title={language === 'ar' ? 'العمولات' : 'Commission'}
                     description={language === 'ar' ? 'احسب تكاليف العمولة' : 'Calculate commission costs'}
                     icon={<Coins className="w-5 h-5" />}
+                    language={language}
                     component={<CommissionCalculator t={t} language={language} />}
                   />
                   <CalculatorCard 
                     title={language === 'ar' ? 'تأثير الرافعة' : 'Leverage Impact'}
                     description={language === 'ar' ? 'تأثير الرافعة على الربح' : 'Leverage effect on profit'}
                     icon={<Layers className="w-5 h-5" />}
+                    language={language}
                     component={<LeverageImpactCalculator t={t} language={language} />}
                   />
                 </div>
