@@ -56,36 +56,70 @@ function CalculatorCard({
   const [isExpanded, setIsExpanded] = useState(false);
   
   return (
-    <Card className="overflow-hidden hover:shadow-lg transition-shadow">
-      <CardHeader className="pb-3 cursor-pointer" onClick={() => setIsExpanded(!isExpanded)}>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg gradient-primary flex items-center justify-center text-white">
-              {icon}
+    <motion.div
+      layout
+      className="group"
+    >
+      <Card className={`
+        overflow-hidden transition-all duration-300 cursor-pointer
+        ${isExpanded 
+          ? 'ring-2 ring-primary shadow-xl scale-[1.02]' 
+          : 'hover:shadow-lg hover:scale-[1.01] border-2 border-transparent hover:border-primary/20'
+        }
+      `}>
+        <div onClick={() => setIsExpanded(!isExpanded)}>
+          <CardHeader className="pb-3">
+            <div className="flex items-center gap-4">
+              <motion.div 
+                className={`
+                  w-14 h-14 rounded-2xl flex items-center justify-center
+                  ${isExpanded 
+                    ? 'gradient-primary text-white shadow-lg' 
+                    : 'bg-gradient-to-br from-primary/10 to-accent/10 text-primary group-hover:from-primary/20 group-hover:to-accent/20'
+                  }
+                `}
+                whileHover={{ rotate: isExpanded ? 0 : 5 }}
+                transition={{ duration: 0.2 }}
+              >
+                {icon}
+              </motion.div>
+              <div className="flex-1 min-w-0">
+                <CardTitle className="text-lg font-bold truncate">{title}</CardTitle>
+                <p className="text-sm text-muted-foreground truncate">{description}</p>
+              </div>
+              <motion.div
+                animate={{ rotate: isExpanded ? 180 : 0 }}
+                transition={{ duration: 0.3 }}
+                className={`
+                  w-8 h-8 rounded-full flex items-center justify-center
+                  ${isExpanded ? 'bg-primary text-primary-foreground' : 'bg-muted'}
+                `}
+              >
+                <ChevronRight className="w-5 h-5" />
+              </motion.div>
             </div>
-            <div>
-              <CardTitle className="text-base">{title}</CardTitle>
-              <p className="text-xs text-muted-foreground">{description}</p>
-            </div>
-          </div>
-          <ChevronRight className={`w-5 h-5 text-muted-foreground transition-transform ${isExpanded ? 'rotate-90' : ''}`} />
+          </CardHeader>
         </div>
-      </CardHeader>
-      <AnimatePresence>
-        {isExpanded && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.2 }}
-          >
-            <CardContent className="pt-0 border-t">
-              {component}
-            </CardContent>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </Card>
+        
+        <AnimatePresence>
+          {isExpanded && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.3, ease: 'easeInOut' }}
+            >
+              <div className="px-6 pb-2">
+                <div className="h-px bg-gradient-to-r from-transparent via-border to-transparent" />
+              </div>
+              <CardContent className="pt-4">
+                {component}
+              </CardContent>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </Card>
+    </motion.div>
   );
 }
 
