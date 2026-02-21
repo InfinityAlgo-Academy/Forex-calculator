@@ -21,6 +21,7 @@ import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import { Progress } from '@/components/ui/progress';
 import { useLanguage, hydrateLanguage } from '@/hooks/useLanguage';
+import { useTradingState, hydrateTradingState } from '@/hooks/useTradingState';
 
 // Currency pairs data
 const currencyPairs = [
@@ -125,44 +126,25 @@ function CalculatorCard({
 
 export default function ForexCalculatorApp() {
   const { language, setLanguage, t, isRTL } = useLanguage();
+  const { 
+    globalPair, 
+    setGlobalPair, 
+    exchangeRates, 
+    setExchangeRates, 
+    stats,
+    incrementCalculation 
+  } = useTradingState();
   const [isDark, setIsDark] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeSection, setActiveSection] = useState('calculators');
-  const [exchangeRates, setExchangeRates] = useState(defaultExchangeRates);
   const [loadingPrices, setLoadingPrices] = useState(false);
   const hasHydrated = useRef(false);
-  
-  // Global currency pair state - syncs across all calculators
-  const [globalPair, setGlobalPair] = useState<string>('EUR/USD');
-  
-  // Statistics tracking - fixed initial values to avoid hydration mismatch
-  const [stats, setStats] = useState({
-    totalCalculations: 0,
-    visitors: 127, // Fixed value for SSR
-    popularCalculators: [
-      { name: 'Position Size', count: 0 },
-      { name: 'Pip Value', count: 0 },
-      { name: 'Risk/Reward', count: 0 },
-      { name: 'Fibonacci', count: 0 },
-      { name: 'Profit/Loss', count: 0 },
-    ]
-  });
 
-  // Increment calculation count
-  const incrementCalculation = (calculatorName: string) => {
-    setStats(prev => ({
-      ...prev,
-      totalCalculations: prev.totalCalculations + 1,
-      popularCalculators: prev.popularCalculators.map(c => 
-        c.name === calculatorName ? { ...c, count: c.count + 1 } : c
-      ).sort((a, b) => b.count - a.count)
-    }));
-  };
-
-  // Hydrate language on mount (runs once)
+  // Hydrate both stores on mount (runs once)
   useLayoutEffect(() => {
     if (!hasHydrated.current) {
       hydrateLanguage();
+      hydrateTradingState();
       hasHydrated.current = true;
     }
   }, []);
@@ -947,12 +929,18 @@ function HeroSection({ t, isRTL, language, setActiveSection, stats, totalCalcula
 
 // Position Size Calculator
 function PositionSizeCalculator({ t, language }: { t: (key: string) => string; language: string }) {
+  const { globalPair, incrementCalculation } = useTradingState();
   const [accountBalance, setAccountBalance] = useState<string>('10000');
   const [riskPercent, setRiskPercent] = useState<string>('2');
   const [stopLossPips, setStopLossPips] = useState<string>('50');
   const [currencyPair, setCurrencyPair] = useState<string>('EUR/USD');
   const [accountCurrency, setAccountCurrency] = useState<string>('USD');
   const [result, setResult] = useState<{ lotSize: number; riskAmount: number } | null>(null);
+
+  // Sync with global pair
+  useEffect(() => {
+    setCurrencyPair(globalPair);
+  }, [globalPair]);
 
   const calculate = () => {
     const balance = parseFloat(accountBalance) || 0;
@@ -967,6 +955,7 @@ function PositionSizeCalculator({ t, language }: { t: (key: string) => string; l
       lotSize: Math.min(Math.max(lotSize, 0.01), 100),
       riskAmount
     });
+    incrementCalculation('Position Size');
   };
 
   return (
@@ -1020,7 +1009,12 @@ function PositionSizeCalculator({ t, language }: { t: (key: string) => string; l
               />
             </div>
             <div className="space-y-2">
-              <Label>{t('currencyPair')}</Label>
+              <Label className="flex items-center gap-2">
+                {t('currencyPair')}
+                {currencyPair === globalPair && (
+                  <Badge variant="outline" className="text-xs">{language === 'ar' ? 'متزامن' : 'Synced'}</Badge>
+                )}
+              </Label>
               <Select value={currencyPair} onValueChange={setCurrencyPair}>
                 <SelectTrigger>
                   <SelectValue />
@@ -1079,10 +1073,16 @@ function PositionSizeCalculator({ t, language }: { t: (key: string) => string; l
 
 // Pip Value Calculator
 function PipValueCalculator({ t, language }: { t: (key: string) => string; language: string }) {
+  const { globalPair, incrementCalculation } = useTradingState();
   const [currencyPair, setCurrencyPair] = useState<string>('EUR/USD');
   const [lotSize, setLotSize] = useState<string>('1');
   const [accountCurrency, setAccountCurrency] = useState<string>('USD');
   const [result, setResult] = useState<number | null>(null);
+
+  // Sync with global pair
+  useEffect(() => {
+    setCurrencyPair(globalPair);
+  }, [globalPair]);
 
   const calculate = () => {
     const lots = parseFloat(lotSize) || 1;
@@ -1098,6 +1098,7 @@ function PipValueCalculator({ t, language }: { t: (key: string) => string; langu
     else if (accountCurrency === 'JPY') pipValue *= 149.5;
     
     setResult(pipValue);
+    incrementCalculation('Pip Value');
   };
 
   return (
@@ -1117,7 +1118,12 @@ function PipValueCalculator({ t, language }: { t: (key: string) => string; langu
         <CardContent className="space-y-6">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="space-y-2">
-              <Label>{t('currencyPair')}</Label>
+              <Label className="flex items-center gap-2">
+                {t('currencyPair')}
+                {currencyPair === globalPair && (
+                  <Badge variant="outline" className="text-xs">{language === 'ar' ? 'متزامن' : 'Synced'}</Badge>
+                )}
+              </Label>
               <Select value={currencyPair} onValueChange={setCurrencyPair}>
                 <SelectTrigger>
                   <SelectValue />
@@ -1180,10 +1186,16 @@ function PipValueCalculator({ t, language }: { t: (key: string) => string; langu
 
 // Margin Calculator
 function MarginCalculator({ t, language, exchangeRates }: { t: (key: string) => string; language: string; exchangeRates: Record<string, number> }) {
+  const { globalPair, incrementCalculation } = useTradingState();
   const [lotSize, setLotSize] = useState<string>('1');
   const [leverage, setLeverage] = useState<string>('1:100');
   const [currencyPair, setCurrencyPair] = useState<string>('EUR/USD');
   const [result, setResult] = useState<number | null>(null);
+
+  // Sync with global pair
+  useEffect(() => {
+    setCurrencyPair(globalPair);
+  }, [globalPair]);
 
   const calculate = () => {
     const lots = parseFloat(lotSize) || 1;
@@ -1194,6 +1206,7 @@ function MarginCalculator({ t, language, exchangeRates }: { t: (key: string) => 
     const margin = (lots * contractSize * rate) / leverageValue;
     
     setResult(margin);
+    incrementCalculation('Margin');
   };
 
   return (
@@ -1236,7 +1249,12 @@ function MarginCalculator({ t, language, exchangeRates }: { t: (key: string) => 
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>{t('currencyPair')}</Label>
+              <Label className="flex items-center gap-2">
+                {t('currencyPair')}
+                {currencyPair === globalPair && (
+                  <Badge variant="outline" className="text-xs">{language === 'ar' ? 'متزامن' : 'Synced'}</Badge>
+                )}
+              </Label>
               <Select value={currencyPair} onValueChange={setCurrencyPair}>
                 <SelectTrigger>
                   <SelectValue />
@@ -1276,19 +1294,23 @@ function MarginCalculator({ t, language, exchangeRates }: { t: (key: string) => 
 
 // Profit/Loss Calculator
 function ProfitLossCalculator({ t, language }: { t: (key: string) => string; language: string }) {
-  const [entryPrice, setEntryPrice] = useState<string>('1.0850');
+  const { globalPair, exchangeRates, incrementCalculation } = useTradingState();
+  const [entryPrice, setEntryPrice] = useState<string>('');
   const [exitPrice, setExitPrice] = useState<string>('1.0900');
   const [lotSize, setLotSize] = useState<string>('1');
   const [tradeType, setTradeType] = useState<'buy' | 'sell'>('buy');
-  const [currencyPair, setCurrencyPair] = useState<string>('EUR/USD');
   const [result, setResult] = useState<{ profit: number; pips: number } | null>(null);
 
+  // Set initial entry price based on global pair price
+  const currentPrice = exchangeRates[globalPair];
+  const displayEntryPrice = entryPrice || (currentPrice ? currentPrice.toFixed(5) : '1.0850');
+
   const calculate = () => {
-    const entry = parseFloat(entryPrice) || 0;
+    const entry = parseFloat(displayEntryPrice) || 0;
     const exit = parseFloat(exitPrice) || 0;
     const lots = parseFloat(lotSize) || 1;
     
-    const isJPYPair = currencyPair.includes('JPY');
+    const isJPYPair = globalPair.includes('JPY');
     const pipSize = isJPYPair ? 0.01 : 0.0001;
     
     let pips: number;
@@ -1303,6 +1325,7 @@ function ProfitLossCalculator({ t, language }: { t: (key: string) => string; lan
     }
     
     setResult({ profit, pips });
+    incrementCalculation('Profit/Loss');
   };
 
   return (
@@ -1329,7 +1352,7 @@ function ProfitLossCalculator({ t, language }: { t: (key: string) => string; lan
               <Label>{t('entryPrice')}</Label>
               <Input
                 type="number"
-                value={entryPrice}
+                value={displayEntryPrice}
                 onChange={(e) => setEntryPrice(e.target.value)}
                 step="0.00001"
               />
@@ -1354,16 +1377,10 @@ function ProfitLossCalculator({ t, language }: { t: (key: string) => string; lan
             </div>
             <div className="space-y-2">
               <Label>{t('currencyPair')}</Label>
-              <Select value={currencyPair} onValueChange={setCurrencyPair}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {currencyPairs.map(pair => (
-                    <SelectItem key={pair} value={pair}>{pair}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="flex items-center gap-2">
+                <Badge variant="secondary" className="px-3 py-2">{globalPair}</Badge>
+                <span className="text-xs text-muted-foreground">{language === 'ar' ? '(متزامن)' : '(synced)'}</span>
+              </div>
             </div>
           </div>
 
@@ -2154,6 +2171,7 @@ function CompoundInterestCalculator({ t, language }: { t: (key: string) => strin
 
 // AI Analysis Section
 function AIAnalysisSection({ t, language, exchangeRates }: { t: (key: string) => string; language: string; exchangeRates: Record<string, number> }) {
+  const { globalPair, setGlobalPair } = useTradingState();
   const [selectedPair, setSelectedPair] = useState<string>('EUR/USD');
   const [isLoading, setIsLoading] = useState(false);
   const [analysis, setAnalysis] = useState<{
@@ -2178,6 +2196,17 @@ function AIAnalysisSection({ t, language, exchangeRates }: { t: (key: string) =>
     };
     marketContext?: string;
   } | null>(null);
+
+  // Sync with global pair
+  useEffect(() => {
+    setSelectedPair(globalPair);
+  }, [globalPair]);
+
+  // Update global pair when user changes selection here
+  const handlePairChange = (pair: string) => {
+    setSelectedPair(pair);
+    setGlobalPair(pair);
+  };
 
   const analyzeMarket = async () => {
     setIsLoading(true);
@@ -2258,7 +2287,7 @@ function AIAnalysisSection({ t, language, exchangeRates }: { t: (key: string) =>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="flex flex-col sm:flex-row gap-4">
-              <Select value={selectedPair} onValueChange={setSelectedPair}>
+              <Select value={selectedPair} onValueChange={handlePairChange}>
                 <SelectTrigger className="flex-1">
                   <SelectValue />
                 </SelectTrigger>
@@ -3132,14 +3161,21 @@ function AccountSizeCalculator({ t, language }: { t: (key: string) => string; la
 
 // Pips Converter
 function PipsConverter({ t, language }: { t: (key: string) => string; language: string }) {
+  const { globalPair, incrementCalculation } = useTradingState();
   const [pips, setPips] = useState('50');
   const [pair, setPair] = useState('EUR/USD');
   const [result, setResult] = useState<number | null>(null);
+
+  // Sync with global pair
+  useEffect(() => {
+    setPair(globalPair);
+  }, [globalPair]);
 
   const calculate = () => {
     const p = parseFloat(pips) || 0;
     const pipSize = pair.includes('JPY') ? 0.01 : 0.0001;
     setResult(p * pipSize);
+    incrementCalculation('Pips Converter');
   };
 
   return (
@@ -3150,7 +3186,12 @@ function PipsConverter({ t, language }: { t: (key: string) => string; language: 
           <Input type="number" value={pips} onChange={(e) => setPips(e.target.value)} />
         </div>
         <div>
-          <Label className="text-xs">{language === 'ar' ? 'الزوج' : 'Pair'}</Label>
+          <Label className="text-xs flex items-center gap-1">
+            {language === 'ar' ? 'الزوج' : 'Pair'}
+            {pair === globalPair && (
+              <Badge variant="outline" className="text-[10px] px-1 py-0">{language === 'ar' ? 'متزامن' : 'Synced'}</Badge>
+            )}
+          </Label>
           <Select value={pair} onValueChange={setPair}>
             <SelectTrigger><SelectValue /></SelectTrigger>
             <SelectContent>
@@ -3245,17 +3286,23 @@ function TimeZoneConverter({ t, language }: { t: (key: string) => string; langua
 
 // Spread Calculator
 function SpreadCalculator({ t, language }: { t: (key: string) => string; language: string }) {
-  const [bidPrice, setBidPrice] = useState('1.0850');
-  const [askPrice, setAskPrice] = useState('1.0852');
-  const [pair, setPair] = useState('EUR/USD');
+  const { globalPair, exchangeRates, incrementCalculation } = useTradingState();
+  const [bidPrice, setBidPrice] = useState('');
+  const [askPrice, setAskPrice] = useState('');
   const [result, setResult] = useState<{ pips: number; value: number } | null>(null);
 
+  // Use global pair directly with calculated default prices
+  const currentPrice = exchangeRates[globalPair];
+  const displayBidPrice = bidPrice || (currentPrice ? (currentPrice - 0.0001).toFixed(5) : '1.0849');
+  const displayAskPrice = askPrice || (currentPrice ? (currentPrice + 0.0001).toFixed(5) : '1.0851');
+
   const calculate = () => {
-    const bid = parseFloat(bidPrice) || 0;
-    const ask = parseFloat(askPrice) || 0;
-    const pipSize = pair.includes('JPY') ? 0.01 : 0.0001;
+    const bid = parseFloat(displayBidPrice) || 0;
+    const ask = parseFloat(displayAskPrice) || 0;
+    const pipSize = globalPair.includes('JPY') ? 0.01 : 0.0001;
     const pips = (ask - bid) / pipSize;
     setResult({ pips, value: pips * 10 });
+    incrementCalculation('Spread');
   };
 
   return (
@@ -3263,20 +3310,15 @@ function SpreadCalculator({ t, language }: { t: (key: string) => string; languag
       <div className="grid grid-cols-3 gap-2">
         <div>
           <Label className="text-xs">Bid</Label>
-          <Input type="number" value={bidPrice} onChange={(e) => setBidPrice(e.target.value)} step="0.00001" />
+          <Input type="number" value={displayBidPrice} onChange={(e) => setBidPrice(e.target.value)} step="0.00001" />
         </div>
         <div>
           <Label className="text-xs">Ask</Label>
-          <Input type="number" value={askPrice} onChange={(e) => setAskPrice(e.target.value)} step="0.00001" />
+          <Input type="number" value={displayAskPrice} onChange={(e) => setAskPrice(e.target.value)} step="0.00001" />
         </div>
         <div>
           <Label className="text-xs">{language === 'ar' ? 'الزوج' : 'Pair'}</Label>
-          <Select value={pair} onValueChange={setPair}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
-            <SelectContent>
-              {currencyPairs.slice(0, 10).map(p => <SelectItem key={p} value={p}>{p}</SelectItem>)}
-            </SelectContent>
-          </Select>
+          <Badge variant="secondary" className="w-full justify-center py-2">{globalPair}</Badge>
         </div>
       </div>
       <Button onClick={calculate} className="w-full gradient-primary text-white text-sm py-1">{t('calculate')}</Button>
