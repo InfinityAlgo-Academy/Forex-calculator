@@ -1,12 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useLayoutEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Calculator, TrendingUp, TrendingDown, DollarSign, Percent, 
   Target, LineChart, BarChart3, Activity, Sun, Moon, 
   Globe, ChevronRight, AlertTriangle, CheckCircle2, 
-  RefreshCw, Zap, Shield, Award, Menu, X
+  RefreshCw, Zap, Shield, Award, Menu, X, Loader2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -18,7 +18,7 @@ import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import { Progress } from '@/components/ui/progress';
-import { useLanguage } from '@/hooks/useLanguage';
+import { useLanguage, hydrateLanguage } from '@/hooks/useLanguage';
 
 // Currency pairs data
 const currencyPairs = [
@@ -32,8 +32,8 @@ const accountCurrencies = ['USD', 'EUR', 'GBP', 'JPY', 'CHF', 'AUD', 'CAD', 'NZD
 
 const leverageOptions = ['1:10', '1:20', '1:50', '1:100', '1:200', '1:500', '1:1000'];
 
-// Exchange rates (mock - in production would come from API)
-const exchangeRates: Record<string, number> = {
+// Real-time exchange rates - will be fetched from API
+const defaultExchangeRates: Record<string, number> = {
   'EUR/USD': 1.0850, 'GBP/USD': 1.2650, 'USD/JPY': 149.50, 'USD/CHF': 0.8850,
   'AUD/USD': 0.6550, 'USD/CAD': 1.3650, 'NZD/USD': 0.6150, 'XAU/USD': 2350.00,
   'BTC/USD': 67500.00, 'ETH/USD': 3450.00
@@ -44,6 +44,43 @@ export default function ForexCalculatorApp() {
   const [isDark, setIsDark] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeSection, setActiveSection] = useState('calculators');
+  const [exchangeRates, setExchangeRates] = useState(defaultExchangeRates);
+  const [loadingPrices, setLoadingPrices] = useState(false);
+  const hasHydrated = useRef(false);
+
+  // Hydrate language on mount (runs once)
+  useLayoutEffect(() => {
+    if (!hasHydrated.current) {
+      hydrateLanguage();
+      hasHydrated.current = true;
+    }
+  }, []);
+
+  // Fetch real forex prices
+  const fetchRealPrices = async () => {
+    setLoadingPrices(true);
+    try {
+      const response = await fetch('/api/forex-prices');
+      if (response.ok) {
+        const data = await response.json();
+        if (data.prices) {
+          setExchangeRates(prev => ({ ...prev, ...data.prices }));
+        }
+      }
+    } catch (error) {
+      console.error('Failed to fetch prices:', error);
+    } finally {
+      setLoadingPrices(false);
+    }
+  };
+
+  // Fetch prices on mount
+  useEffect(() => {
+    fetchRealPrices();
+    // Refresh every 30 seconds
+    const interval = setInterval(fetchRealPrices, 30000);
+    return () => clearInterval(interval);
+  }, []);
 
   // Toggle dark mode
   useEffect(() => {

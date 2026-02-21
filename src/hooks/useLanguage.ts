@@ -30,11 +30,7 @@ export const useLanguage = create<LanguageState>()(
   )
 );
 
-// Hook to hydrate language after mount
-export function useHydrateLanguage() {
-  const hydrate = useLanguage.persist.rehydrate;
-  
-  if (typeof window !== 'undefined') {
-    hydrate();
-  }
-}
+// Hydration helper - call this in useEffect on client
+export const hydrateLanguage = () => {
+  useLanguage.persist.rehydrate();
+};
