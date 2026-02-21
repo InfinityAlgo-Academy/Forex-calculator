@@ -144,35 +144,33 @@ export default function ForexCalculatorApp() {
                 </TabsTrigger>
               </TabsList>
 
-              <AnimatePresence mode="wait">
-                <TabsContent value="position" className="mt-0">
-                  <PositionSizeCalculator t={t} language={language} />
-                </TabsContent>
-                <TabsContent value="pip" className="mt-0">
-                  <PipValueCalculator t={t} language={language} />
-                </TabsContent>
-                <TabsContent value="margin" className="mt-0">
-                  <MarginCalculator t={t} language={language} />
-                </TabsContent>
-                <TabsContent value="profit" className="mt-0">
-                  <ProfitLossCalculator t={t} language={language} />
-                </TabsContent>
-                <TabsContent value="risk" className="mt-0">
-                  <RiskRewardCalculator t={t} language={language} />
-                </TabsContent>
-                <TabsContent value="fibonacci" className="mt-0">
-                  <FibonacciCalculator t={t} language={language} />
-                </TabsContent>
-                <TabsContent value="pivot" className="mt-0">
-                  <PivotPointsCalculator t={t} language={language} />
-                </TabsContent>
-                <TabsContent value="swap" className="mt-0">
-                  <SwapCalculator t={t} language={language} />
-                </TabsContent>
-                <TabsContent value="converter" className="mt-0">
-                  <CurrencyConverter t={t} language={language} />
-                </TabsContent>
-              </AnimatePresence>
+              <TabsContent value="position" className="mt-0">
+                <PositionSizeCalculator t={t} language={language} />
+              </TabsContent>
+              <TabsContent value="pip" className="mt-0">
+                <PipValueCalculator t={t} language={language} />
+              </TabsContent>
+              <TabsContent value="margin" className="mt-0">
+                <MarginCalculator t={t} language={language} />
+              </TabsContent>
+              <TabsContent value="profit" className="mt-0">
+                <ProfitLossCalculator t={t} language={language} />
+              </TabsContent>
+              <TabsContent value="risk" className="mt-0">
+                <RiskRewardCalculator t={t} language={language} />
+              </TabsContent>
+              <TabsContent value="fibonacci" className="mt-0">
+                <FibonacciCalculator t={t} language={language} />
+              </TabsContent>
+              <TabsContent value="pivot" className="mt-0">
+                <PivotPointsCalculator t={t} language={language} />
+              </TabsContent>
+              <TabsContent value="swap" className="mt-0">
+                <SwapCalculator t={t} language={language} />
+              </TabsContent>
+              <TabsContent value="converter" className="mt-0">
+                <CurrencyConverter t={t} language={language} />
+              </TabsContent>
             </Tabs>
           </div>
         </section>
@@ -1497,6 +1495,19 @@ function AIAnalysisSection({ t, language }: { t: (key: string) => string; langua
     takeProfit: number;
     riskLevel: 'low' | 'medium' | 'high';
     recommendation: string;
+    technicalAnalysis?: string;
+    keyLevels?: {
+      support1: number;
+      support2: number;
+      resistance1: number;
+      resistance2: number;
+    };
+    indicators?: {
+      rsi: string;
+      macd: string;
+      trend: string;
+    };
+    marketContext?: string;
   } | null>(null);
 
   const analyzeMarket = async () => {
@@ -1515,21 +1526,39 @@ function AIAnalysisSection({ t, language }: { t: (key: string) => string; langua
       // Fallback to mock data
       const currentPrice = exchangeRates[selectedPair] || 1.0850;
       const sentiment = Math.random() > 0.5 ? 'bullish' : Math.random() > 0.5 ? 'bearish' : 'neutral';
+      const pipSize = selectedPair.includes('JPY') ? 0.01 : 0.0001;
       
       setAnalysis({
         sentiment,
-        confidence: Math.floor(Math.random() * 30) + 60,
+        confidence: Math.floor(Math.random() * 25) + 70,
         entryPrice: currentPrice,
         stopLoss: sentiment === 'bullish' 
-          ? currentPrice - 0.0050 
-          : currentPrice + 0.0050,
+          ? Number((currentPrice - 40 * pipSize).toFixed(5))
+          : Number((currentPrice + 40 * pipSize).toFixed(5)),
         takeProfit: sentiment === 'bullish' 
-          ? currentPrice + 0.0100 
-          : currentPrice - 0.0100,
+          ? Number((currentPrice + 80 * pipSize).toFixed(5))
+          : Number((currentPrice - 80 * pipSize).toFixed(5)),
         riskLevel: Math.random() > 0.6 ? 'low' : Math.random() > 0.4 ? 'medium' : 'high',
         recommendation: language === 'ar'
           ? `تحليل ${selectedPair}: ${sentiment === 'bullish' ? 'فرص شراء محتملة' : sentiment === 'bearish' ? 'فرص بيع محتملة' : 'الانتظار أفضل'}`
           : `${selectedPair} Analysis: ${sentiment === 'bullish' ? 'Potential buying opportunity' : sentiment === 'bearish' ? 'Potential selling opportunity' : 'Better to wait'}`,
+        technicalAnalysis: language === 'ar'
+          ? `يظهر ${selectedPair} اتجاه ${sentiment === 'bullish' ? 'صعودي' : sentiment === 'bearish' ? 'هبوطي' : 'عرضي'} مع زخم ${sentiment === 'bullish' ? 'إيجابي' : sentiment === 'bearish' ? 'سلبي' : 'محايد'}.`
+          : `${selectedPair} shows a ${sentiment} trend with ${sentiment === 'bullish' ? 'positive' : sentiment === 'bearish' ? 'negative' : 'neutral'} momentum.`,
+        keyLevels: {
+          support1: Number((currentPrice - 20 * pipSize).toFixed(5)),
+          support2: Number((currentPrice - 40 * pipSize).toFixed(5)),
+          resistance1: Number((currentPrice + 20 * pipSize).toFixed(5)),
+          resistance2: Number((currentPrice + 40 * pipSize).toFixed(5)),
+        },
+        indicators: {
+          rsi: sentiment === 'bullish' ? '58 (Neutral-Bullish)' : sentiment === 'bearish' ? '42 (Neutral-Bearish)' : '50 (Neutral)',
+          macd: sentiment === 'bullish' ? 'Bullish signal' : sentiment === 'bearish' ? 'Bearish signal' : 'Consolidating',
+          trend: sentiment === 'bullish' ? 'Uptrend' : sentiment === 'bearish' ? 'Downtrend' : 'Sideways',
+        },
+        marketContext: language === 'ar'
+          ? 'السوق يشهد تقلبات معتدلة مع انتظار بيانات اقتصادية مهمة.'
+          : 'Market experiencing moderate volatility awaiting important economic data.',
       });
     }
     
@@ -1678,12 +1707,107 @@ function AIAnalysisSection({ t, language }: { t: (key: string) => string; langua
                   </Badge>
                 </div>
 
+                {/* Technical Analysis */}
+                {analysis.technicalAnalysis && (
+                  <Card className="bg-gradient-to-r from-primary/5 to-accent/5">
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-lg flex items-center gap-2">
+                        <LineChart className="w-5 h-5 text-primary" />
+                        {language === 'ar' ? 'التحليل الفني' : 'Technical Analysis'}
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-muted-foreground">{analysis.technicalAnalysis}</p>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* Key Levels */}
+                {analysis.keyLevels && (
+                  <div className="space-y-3">
+                    <h4 className="font-semibold flex items-center gap-2">
+                      <Target className="w-5 h-5 text-primary" />
+                      {language === 'ar' ? 'المستويات الرئيسية' : 'Key Levels'}
+                    </h4>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="p-3 rounded-lg bg-success/10 border border-success/20">
+                        <p className="text-xs text-muted-foreground">{language === 'ar' ? 'الدعم 1' : 'Support 1'}</p>
+                        <p className="font-bold text-success">{analysis.keyLevels.support1.toFixed(5)}</p>
+                      </div>
+                      <div className="p-3 rounded-lg bg-success/10 border border-success/20">
+                        <p className="text-xs text-muted-foreground">{language === 'ar' ? 'الدعم 2' : 'Support 2'}</p>
+                        <p className="font-bold text-success">{analysis.keyLevels.support2.toFixed(5)}</p>
+                      </div>
+                      <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/20">
+                        <p className="text-xs text-muted-foreground">{language === 'ar' ? 'المقاومة 1' : 'Resistance 1'}</p>
+                        <p className="font-bold text-destructive">{analysis.keyLevels.resistance1.toFixed(5)}</p>
+                      </div>
+                      <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/20">
+                        <p className="text-xs text-muted-foreground">{language === 'ar' ? 'المقاومة 2' : 'Resistance 2'}</p>
+                        <p className="font-bold text-destructive">{analysis.keyLevels.resistance2.toFixed(5)}</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Indicators */}
+                {analysis.indicators && (
+                  <div className="space-y-3">
+                    <h4 className="font-semibold flex items-center gap-2">
+                      <BarChart3 className="w-5 h-5 text-primary" />
+                      {language === 'ar' ? 'المؤشرات الفنية' : 'Technical Indicators'}
+                    </h4>
+                    <div className="grid grid-cols-3 gap-3">
+                      <div className="p-3 rounded-lg bg-muted text-center">
+                        <p className="text-xs text-muted-foreground mb-1">RSI</p>
+                        <p className="text-sm font-semibold">{analysis.indicators.rsi}</p>
+                      </div>
+                      <div className="p-3 rounded-lg bg-muted text-center">
+                        <p className="text-xs text-muted-foreground mb-1">MACD</p>
+                        <p className="text-sm font-semibold">{analysis.indicators.macd}</p>
+                      </div>
+                      <div className="p-3 rounded-lg bg-muted text-center">
+                        <p className="text-xs text-muted-foreground mb-1">{language === 'ar' ? 'الترند' : 'Trend'}</p>
+                        <p className="text-sm font-semibold">{analysis.indicators.trend}</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Market Context */}
+                {analysis.marketContext && (
+                  <div className="p-4 bg-muted/50 rounded-lg border">
+                    <p className="text-xs text-muted-foreground mb-1">{language === 'ar' ? 'السياق السوقي' : 'Market Context'}</p>
+                    <p className="text-sm">{analysis.marketContext}</p>
+                  </div>
+                )}
+
                 {/* Recommendation */}
                 <div className="p-4 bg-card border rounded-lg">
                   <p className="text-sm text-muted-foreground mb-2">
                     {language === 'ar' ? 'التوصية' : 'Recommendation'}
                   </p>
                   <p className="font-medium">{analysis.recommendation}</p>
+                </div>
+
+                {/* Risk/Reward Calculator Link */}
+                <div className="p-4 bg-primary/5 border border-primary/20 rounded-lg text-center">
+                  <p className="text-sm text-muted-foreground mb-2">
+                    {language === 'ar' ? 'احسب نسبة المخاطرة للمكافأة' : 'Calculate Risk/Reward Ratio'}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {language === 'ar' 
+                      ? `الدخول: ${analysis.entryPrice.toFixed(5)} | الوقف: ${analysis.stopLoss.toFixed(5)} | الهدف: ${analysis.takeProfit.toFixed(5)}`
+                      : `Entry: ${analysis.entryPrice.toFixed(5)} | SL: ${analysis.stopLoss.toFixed(5)} | TP: ${analysis.takeProfit.toFixed(5)}`}
+                  </p>
+                  <div className="mt-2 flex justify-center gap-2">
+                    <Badge variant="outline" className="border-success text-success">
+                      {language === 'ar' ? 'مخاطرة: ' : 'Risk: '}{Math.abs(analysis.entryPrice - analysis.stopLoss).toFixed(5)}
+                    </Badge>
+                    <Badge variant="outline" className="border-primary text-primary">
+                      {language === 'ar' ? 'مكافأة: ' : 'Reward: '}{Math.abs(analysis.takeProfit - analysis.entryPrice).toFixed(5)}
+                    </Badge>
+                  </div>
                 </div>
               </motion.div>
             )}
